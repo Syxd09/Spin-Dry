@@ -11,6 +11,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { SiteHeader } from "@/components/site/SiteHeader";
+import { SiteFooter } from "@/components/site/SiteFooter";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -77,21 +80,59 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Spin & Dry — Professional Fabric Care & Laundry" },
+      {
+        name: "description",
+        content:
+          "Professional fabric care studio for curtains, carpets, bedding, upholstery and commercial linen. Free pickup and delivery within 10 km.",
+      },
+      { name: "author", content: "Spin & Dry" },
+      { property: "og:site_name", content: "Spin & Dry" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          "@id": "https://spinanddry.com/#business",
+          name: "Spin & Dry",
+          description:
+            "Professional fabric care and laundry company specialising in curtains, carpets, blankets, sofa covers, bedding, quilts and commercial linen. Free pickup and delivery within a 10 km radius.",
+          telephone: "+91 98765 43210",
+          email: "care@spinanddry.com",
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "24 Linen Lane, Indiranagar",
+            addressLocality: "Bengaluru",
+            postalCode: "560038",
+            addressCountry: "IN",
+          },
+          geo: { "@type": "GeoCoordinates", latitude: 12.9784, longitude: 77.6408 },
+          areaServed: {
+            "@type": "GeoCircle",
+            geoMidpoint: { "@type": "GeoCoordinates", latitude: 12.9784, longitude: 77.6408 },
+            geoRadius: "10000",
+          },
+          openingHours: ["Mo-Sa 08:00-20:00", "Su 09:00-14:00"],
+          priceRange: "$$",
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -119,8 +160,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <main className="flex-1">
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </main>
+        <SiteFooter />
+      </div>
+      <Toaster />
     </QueryClientProvider>
   );
 }

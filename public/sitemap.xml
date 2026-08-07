@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- TODO: prefix each <loc> with the live domain once the site is published. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>/</loc><priority>1.0</priority></url>
+  <url><loc>/services</loc><priority>0.9</priority></url>
+  <url><loc>/process</loc><priority>0.7</priority></url>
+  <url><loc>/about</loc><priority>0.7</priority></url>
+  <url><loc>/coverage</loc><priority>0.7</priority></url>
+  <url><loc>/faq</loc><priority>0.6</priority></url>
+  <url><loc>/contact</loc><priority>0.6</priority></url>
+  <url><loc>/services/curtain-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/carpet-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/blanket-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/sofa-cover-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/bedsheet-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/comforter-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/duvet-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/pillow-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/cushion-cover-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/quilt-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/table-linen-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/home-linen-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/commercial-linen-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/hotel-linen-cleaning</loc><priority>0.8</priority></url>
+  <url><loc>/services/office-fabric-care</loc><priority>0.8</priority></url>
+  <url><loc>/services/general-laundry</loc><priority>0.8</priority></url>
+</urlset>
