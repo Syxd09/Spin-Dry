@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Menu, X, Phone, CalendarCheck, MessageSquare } from "lucide-react";
+import { Menu, X, Phone, CalendarCheck, MessageSquare, MapPin } from "lucide-react";
 import { services } from "@/data/services";
 import { site } from "@/data/site";
 import { Wordmark } from "./Wordmark";
