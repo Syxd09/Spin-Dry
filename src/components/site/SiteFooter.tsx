@@ -8,9 +8,16 @@ export function SiteFooter() {
       <div className="mx-auto max-w-[88rem] px-5 py-16 md:px-10 md:py-24">
         <div className="grid gap-14 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
           <div>
-            <p className="font-display text-3xl text-background">
-              Spin <span className="text-brass">&amp;</span> Dry
-            </p>
+            <div className="flex items-center gap-3">
+              <img
+                src="/logo.png"
+                alt="Spin & Dry Logo"
+                className="size-11 rounded-full object-cover border-2 border-brass/60 shadow-lg"
+              />
+              <p className="font-display text-3xl text-background font-bold">
+                Spin <span className="text-brass">&amp;</span> Dry
+              </p>
+            </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed">
               Professional fabric care and laundry studio. Curtains, carpets, bedding, upholstery
               and commercial linen, with free pickup and delivery inside {site.pickupRadiusKm} km.
@@ -79,7 +86,7 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link to="/track" className="text-brass font-semibold hover:underline">
+                <Link to="/track" search={{ ref: "", phone: "" }} className="text-brass font-semibold hover:underline">
                   📍 Track Order Live
                 </Link>
               </li>

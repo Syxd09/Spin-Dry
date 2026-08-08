@@ -253,8 +253,8 @@ function AdminPage() {
       <div className="min-h-screen flex items-center justify-center bg-slate-950 px-5 py-12 text-slate-100 font-sans">
         <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/90 p-8 shadow-2xl backdrop-blur-xl">
           <div className="flex flex-col items-center text-center">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 shadow-inner mb-4">
-              <Lock className="size-7" />
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/30 overflow-hidden shadow-inner mb-4">
+              <img src="/logo.png" alt="Spin & Dry Logo" className="size-full object-cover" />
             </div>
             <h1 className="font-display text-2xl font-bold tracking-tight text-white">Studio Admin Authentication</h1>
             <p className="mt-1.5 text-xs text-slate-400">
@@ -332,9 +332,11 @@ function AdminPage() {
           {/* Studio Brand Header */}
           <div className="flex h-16 items-center justify-between border-b border-slate-800/80 px-3.5">
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-brass/15 border border-brass/30 text-brass font-display text-sm font-bold shadow-sm">
-                SD
-              </div>
+              <img
+                src="/logo.png"
+                alt="Spin & Dry Logo"
+                className="size-9 shrink-0 rounded-full object-cover border-2 border-brass/60 shadow-md"
+              />
               {isSidebarOpen && (
                 <div className="truncate">
                   <h2 className="font-display font-bold text-sm tracking-tight text-white truncate">Spin &amp; Dry</h2>

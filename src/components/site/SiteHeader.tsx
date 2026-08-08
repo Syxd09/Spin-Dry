@@ -47,7 +47,7 @@ export function SiteHeader() {
             <span>Studio Open Today · Konanakunte, Bengaluru</span>
           </div>
           <div className="flex items-center gap-6">
-            <Link to="/track" className="font-semibold text-brass hover:underline flex items-center gap-1">
+            <Link to="/track" search={{ ref: "", phone: "" }} className="font-semibold text-brass hover:underline flex items-center gap-1">
               📍 Track Order
             </Link>
             <span className="hidden sm:inline">Free Doorstep Pickup within {site.pickupRadiusKm} km</span>
@@ -78,17 +78,30 @@ export function SiteHeader() {
           </Link>
 
           <nav aria-label="Primary" className="hidden items-center gap-8 lg:flex">
-            {nav.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className="relative py-1 text-sm font-medium text-ink-soft transition-colors hover:text-foreground group"
-                activeProps={{ className: "text-foreground font-semibold" }}
-              >
-                {item.label}
-                <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-brass transition-all duration-300 group-hover:w-full" />
-              </Link>
-            ))}
+            {nav.map((item) =>
+              item.to === "/track" ? (
+                <Link
+                  key={item.to}
+                  to="/track"
+                  search={{ ref: "", phone: "" }}
+                  className="relative py-1 text-sm font-medium text-ink-soft transition-colors hover:text-foreground group"
+                  activeProps={{ className: "text-foreground font-semibold" }}
+                >
+                  {item.label}
+                  <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-brass transition-all duration-300 group-hover:w-full" />
+                </Link>
+              ) : (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="relative py-1 text-sm font-medium text-ink-soft transition-colors hover:text-foreground group"
+                  activeProps={{ className: "text-foreground font-semibold" }}
+                >
+                  {item.label}
+                  <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-brass transition-all duration-300 group-hover:w-full" />
+                </Link>
+              ),
+            )}
           </nav>
 
           <div className="flex items-center gap-4">
@@ -125,16 +138,28 @@ export function SiteHeader() {
       {open && (
         <div className="fixed inset-x-0 top-[110px] bottom-0 z-40 overflow-y-auto border-t border-border bg-background/98 backdrop-blur-xl px-5 py-8 lg:hidden">
           <nav aria-label="Mobile" className="flex flex-col gap-1">
-            {nav.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setOpen(false)}
-                className="border-b border-border/60 py-4 font-display text-2xl"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {nav.map((item) =>
+              item.to === "/track" ? (
+                <Link
+                  key={item.to}
+                  to="/track"
+                  search={{ ref: "", phone: "" }}
+                  onClick={() => setOpen(false)}
+                  className="border-b border-border/60 py-4 font-display text-2xl"
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  className="border-b border-border/60 py-4 font-display text-2xl"
+                >
+                  {item.label}
+                </Link>
+              ),
+            )}
           </nav>
 
           <div className="mt-8">
