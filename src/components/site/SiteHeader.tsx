@@ -48,7 +48,7 @@ export function SiteHeader() {
           </div>
           <div className="flex items-center gap-6">
             <Link to="/track" search={{ ref: "", phone: "" }} className="font-semibold text-brass hover:underline flex items-center gap-1">
-              📍 Track Order
+              <MapPin className="size-3 text-brass" /> Track Order
             </Link>
             <span className="hidden sm:inline">Free Doorstep Pickup within {site.pickupRadiusKm} km</span>
             <a

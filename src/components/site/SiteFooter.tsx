@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { MapPin } from "lucide-react";
 import { services } from "@/data/services";
 import { site } from "@/data/site";
 
@@ -86,8 +87,8 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link to="/track" search={{ ref: "", phone: "" }} className="text-brass font-semibold hover:underline">
-                  📍 Track Order Live
+                <Link to="/track" search={{ ref: "", phone: "" }} className="text-brass font-semibold hover:underline inline-flex items-center gap-1">
+                  <MapPin className="size-3 text-brass" /> Track Order Live
                 </Link>
               </li>
             </ul>

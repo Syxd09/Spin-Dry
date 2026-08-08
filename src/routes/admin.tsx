@@ -42,6 +42,8 @@ import {
   TrendingUp,
   Building2,
   Home,
+  Megaphone,
+  Navigation,
 } from "lucide-react";
 import { site } from "@/data/site";
 import { services as defaultServices, Service } from "@/data/services";
@@ -578,14 +580,14 @@ function AdminPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-3.5 py-2 text-xs font-semibold text-purple-900 select-none">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-3.5 py-2 text-xs font-semibold text-purple-900 select-none hover:bg-purple-100/70 transition-colors">
                     <input
                       type="checkbox"
                       checked={expressOnly}
                       onChange={(e) => setExpressOnly(e.target.checked)}
                       className="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
                     />
-                    ⚡ Express 24h Only
+                    <Zap className="size-3.5 text-purple-600" /> Express 24h Priority
                   </label>
 
                   <div className="flex items-center gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-slate-100 p-1">
@@ -597,7 +599,7 @@ function AdminPage() {
                         className={cn(
                           "rounded-md px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap",
                           statusFilter === st
-                            ? "bg-white text-slate-900 shadow-sm"
+                            ? "bg-white text-slate-900 shadow-sm font-bold"
                             : "text-slate-600 hover:text-slate-900",
                         )}
                       >
@@ -638,9 +640,9 @@ function AdminPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedRefs([])}
-                    className="text-xs font-bold text-slate-600 hover:text-slate-900 hover:underline px-2"
+                    className="text-xs font-semibold text-amber-800 hover:underline"
                   >
-                    Deselect All
+                    Clear Selection
                   </button>
                 </div>
               </div>
@@ -650,9 +652,9 @@ function AdminPage() {
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-slate-700">
-                  <thead className="border-b border-slate-200 bg-slate-900 text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                  <thead className="border-b border-slate-800 bg-slate-950 text-[11px] font-bold text-slate-200 uppercase tracking-wider">
                     <tr>
-                      <th className="px-3 py-4 w-10 text-center">
+                      <th className="px-3.5 py-4 w-10 text-center">
                         <input
                           type="checkbox"
                           checked={filteredOrders.length > 0 && selectedRefs.length === filteredOrders.length}
@@ -703,11 +705,11 @@ function AdminPage() {
                           <tr
                             key={o.reference}
                             className={cn(
-                              "hover:bg-slate-50/80 transition-colors",
+                              "hover:bg-slate-50/80 transition-colors border-b border-slate-100",
                               isSelected && "bg-amber-50/40",
                             )}
                           >
-                            <td className="px-3 py-4 text-center">
+                            <td className="px-3.5 py-4 text-center">
                               <input
                                 type="checkbox"
                                 checked={isSelected}
@@ -726,12 +728,12 @@ function AdminPage() {
                               <div className="flex items-center gap-2">
                                 <span>#{o.reference}</span>
                                 {o.isExpress && (
-                                  <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-extrabold text-purple-700 uppercase">
-                                    24h
+                                  <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-extrabold text-purple-800 uppercase flex items-center gap-0.5">
+                                    <Zap className="size-2.5 text-purple-700" /> 24H
                                   </span>
                                 )}
                               </div>
-                              <span className="mt-1 block text-[11px] font-sans text-slate-400">
+                              <span className="mt-1 block text-[11px] font-sans text-slate-400 font-normal">
                                 {new Date(o.createdAt).toLocaleDateString()}
                               </span>
                             </td>
@@ -741,22 +743,30 @@ function AdminPage() {
                               <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
                                 <span>{o.phone}</span>
                                 <span>·</span>
-                                <span className="capitalize">{o.customerType}</span>
+                                <span className="capitalize text-slate-600 font-medium">{o.customerType}</span>
                               </div>
                             </td>
 
                             <td className="px-5 py-4">
                               <div className="font-medium text-slate-900">{o.date}</div>
-                              <div className="text-xs text-slate-500">{o.slot}</div>
-                              <span className="mt-1 inline-block text-[11px] font-semibold text-slate-500 capitalize">
-                                {o.logistics === "pickup-delivery" ? "🚚 Doorstep Pickup" : "🏬 Studio Drop-off"}
+                              <div className="text-xs text-slate-500 font-mono">{o.slot}</div>
+                              <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 capitalize">
+                                {o.logistics === "pickup-delivery" ? (
+                                  <>
+                                    <Truck className="size-3 text-slate-500" /> Doorstep Pickup
+                                  </>
+                                ) : (
+                                  <>
+                                    <Building2 className="size-3 text-slate-500" /> Studio Drop-off
+                                  </>
+                                )}
                               </span>
                             </td>
 
                             <td className="px-5 py-4">
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-1.5">
-                                  <MapPin className="size-3.5 text-amber-500 shrink-0" />
+                                  <MapPin className="size-3.5 text-amber-600 shrink-0" />
                                   <span className="font-semibold text-slate-900">
                                     {o.distanceKm !== null ? `${o.distanceKm.toFixed(1)} km` : "Location"}
                                   </span>
@@ -765,10 +775,10 @@ function AdminPage() {
                                   href={o.coords ? `https://www.google.com/maps?q=${o.coords.lat},${o.coords.lng}` : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(o.address)}`}
                                   target="_blank"
                                   rel="noreferrer noopener"
-                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 px-2 py-0.5 rounded transition-colors shadow-xs"
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 hover:text-amber-700 bg-slate-100 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 px-2 py-0.5 rounded transition-all shadow-xs"
                                   title="Open Doorstep Navigation in Google Maps"
                                 >
-                                  📍 Maps ↗
+                                  <Navigation className="size-2.5 text-slate-500" /> Route ↗
                                 </a>
                               </div>
                               <span
@@ -787,7 +797,7 @@ function AdminPage() {
                                   value={o.status}
                                   onChange={(e) => handleStatusChange(o.reference, e.target.value as OrderStatus)}
                                   className={cn(
-                                    "rounded-full border px-3 py-1 text-xs font-bold transition-all focus:outline-none cursor-pointer",
+                                    "rounded-full border px-3 py-1 text-xs font-bold transition-all focus:outline-none cursor-pointer shadow-xs",
                                     statusColors[o.status],
                                   )}
                                 >
@@ -804,7 +814,7 @@ function AdminPage() {
                                   <button
                                     type="button"
                                     onClick={() => handleQuickAdvance(o.reference, o.status)}
-                                    className="rounded-full bg-slate-100 p-1 text-slate-600 hover:bg-amber-500 hover:text-slate-950 transition-colors"
+                                    className="rounded-full bg-slate-100 p-1 text-slate-600 hover:bg-amber-500 hover:text-slate-950 transition-colors shadow-xs"
                                     title="1-Click Advance to Next Stage"
                                   >
                                     <ChevronRight className="size-3.5" />
@@ -812,14 +822,14 @@ function AdminPage() {
                                 )}
                               </div>
                               {stageIndex >= 0 && (
-                                <div className="mt-1.5 flex items-center gap-1">
-                                  <div className="h-1 flex-1 rounded-full bg-slate-200 overflow-hidden">
+                                <div className="mt-1.5 flex items-center gap-1.5">
+                                  <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden border border-slate-200/60">
                                     <div
-                                      className="h-full bg-amber-500 transition-all duration-300"
+                                      className="h-full bg-amber-500 transition-all duration-300 rounded-full"
                                       style={{ width: `${((stageIndex + 1) / statusPipeline.length) * 100}%` }}
                                     />
                                   </div>
-                                  <span className="text-[9px] font-mono text-slate-400">
+                                  <span className="text-[10px] font-mono text-slate-400 font-semibold">
                                     {stageIndex + 1}/6
                                   </span>
                                 </div>
@@ -1529,7 +1539,9 @@ function EditOrderDrawer({
 
           {/* Live Customer Alert / Announcement */}
           <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 space-y-1">
-            <label className="block text-xs font-bold text-amber-900 uppercase tracking-wider">📢 Live Customer Alert / Studio Announcement</label>
+            <label className="flex items-center gap-1.5 text-xs font-bold text-amber-900 uppercase tracking-wider">
+              <Megaphone className="size-3.5 text-amber-600" /> Live Customer Alert / Studio Announcement
+            </label>
             <p className="text-[11px] text-amber-800">This message will be highlighted directly on the client's order tracking page.</p>
             <input
               type="text"
@@ -1542,7 +1554,9 @@ function EditOrderDrawer({
 
           {/* Cancellation Reason (especially relevant if Cancelled) */}
           <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-4 space-y-1">
-            <label className="block text-xs font-bold text-rose-900 uppercase tracking-wider">⚠️ Cancellation Reason (Shown to client if Cancelled)</label>
+            <label className="flex items-center gap-1.5 text-xs font-bold text-rose-900 uppercase tracking-wider">
+              <AlertCircle className="size-3.5 text-rose-600" /> Cancellation Reason (Shown to client if Cancelled)
+            </label>
             <textarea
               rows={2}
               value={draft.cancellationReason || ""}
@@ -1564,7 +1578,7 @@ function EditOrderDrawer({
                 rel="noreferrer noopener"
                 className="inline-flex items-center gap-1.5 rounded bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-colors shadow"
               >
-                📍 Start Driver Google Maps Route <ExternalLink className="size-3" />
+                <Navigation className="size-3" /> Start Driver Google Maps Route <ExternalLink className="size-3" />
               </a>
             </div>
             <p className="mt-2 text-xs text-slate-300">{draft.address}</p>

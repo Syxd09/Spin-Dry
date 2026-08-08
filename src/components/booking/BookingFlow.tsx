@@ -174,7 +174,7 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
         }));
 
         setChecking(false);
-        toast.success(`📍 Device GPS Location & Address Auto-Filled! (${km.toFixed(1)} km from studio)`);
+        toast.success(`Device GPS Location & Address Auto-Filled! (${km.toFixed(1)} km from studio)`);
       },
       () => {
         setChecking(false);
@@ -339,7 +339,7 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
             <div>
               <dt className="eyebrow text-muted-foreground">Processing Speed</dt>
               <dd className="mt-1 font-semibold text-foreground">
-                {draft.isExpress ? "⚡ 24-Hour Express Priority" : "48-Hour Standard Fabric Care"}
+                {draft.isExpress ? "24-Hour Express Priority" : "48-Hour Standard Fabric Care"}
               </dd>
             </div>
             <div>
@@ -424,9 +424,9 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
           </button>
           <a
             href={`/track?ref=${confirmed}`}
-            className="border border-border px-6 py-3.5 text-xs font-semibold tracking-[0.14em] uppercase hover:border-ink transition-colors"
+            className="inline-flex items-center gap-2 border border-border px-6 py-3.5 text-xs font-semibold tracking-[0.14em] uppercase hover:border-ink transition-colors"
           >
-            📍 Track Order Live
+            <MapPin className="size-4 text-brass" /> Track Order Live
           </a>
         </div>
       </div>

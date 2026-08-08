@@ -273,8 +273,8 @@ function TrackPage() {
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-lg font-bold text-brass">#{searchedOrder.reference}</span>
                     {searchedOrder.isExpress && (
-                      <span className="rounded bg-purple-500/20 px-2 py-0.5 text-[10px] font-extrabold text-purple-300 uppercase tracking-wider">
-                        ⚡ 24h Express
+                      <span className="rounded bg-purple-500/20 px-2 py-0.5 text-[10px] font-extrabold text-purple-300 uppercase tracking-wider flex items-center gap-1">
+                        <Sparkles className="size-3 text-purple-300" /> 24h Express
                       </span>
                     )}
                   </div>
