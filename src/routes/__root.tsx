@@ -118,15 +118,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           email: "care@spinanddry.com",
           address: {
             "@type": "PostalAddress",
-            streetAddress: "24 Linen Lane, Indiranagar",
+            streetAddress: "14th Cross Rd, Narayana Nagar 1st Block, Konanakunte",
             addressLocality: "Bengaluru",
-            postalCode: "560038",
+            postalCode: "560062",
             addressCountry: "IN",
           },
-          geo: { "@type": "GeoCoordinates", latitude: 12.9784, longitude: 77.6408 },
+          geo: { "@type": "GeoCoordinates", latitude: 12.880174, longitude: 77.5517447 },
           areaServed: {
             "@type": "GeoCircle",
-            geoMidpoint: { "@type": "GeoCoordinates", latitude: 12.9784, longitude: 77.6408 },
+            geoMidpoint: { "@type": "GeoCoordinates", latitude: 12.880174, longitude: 77.5517447 },
             geoRadius: "10000",
           },
           openingHours: ["Mo-Sa 08:00-20:00", "Su 09:00-14:00"],
@@ -157,16 +157,18 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const isAdmin = router.state.location.pathname.startsWith("/admin");
 
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex min-h-screen flex-col">
-        <SiteHeader />
+        {!isAdmin && <SiteHeader />}
         <main className="flex-1">
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </main>
-        <SiteFooter />
+        {!isAdmin && <SiteFooter />}
       </div>
       <Toaster />
     </QueryClientProvider>

@@ -2,18 +2,19 @@ export const site = {
   name: "Spin & Dry",
   tagline: "Professional fabric care studio",
   description:
-    "Spin & Dry is a professional fabric care and laundry company specialising in curtains, carpets, blankets, sofa covers, quilts and commercial linen, with free pickup and delivery within 10 km of the studio.",
+    "Spin & Dry is a professional fabric care and laundry company specialising in curtains, carpets, blankets, sofa covers, quilts and commercial linen, with free pickup and delivery within 10 km of our studio in Konanakunte, Bengaluru.",
   phone: "+91 98765 43210",
   phoneHref: "tel:+919876543210",
   whatsapp: "https://wa.me/919876543210",
   email: "care@spinanddry.com",
-  address: "Spin & Dry Fabric Care Studio, 24 Linen Lane, Indiranagar, Bengaluru 560038",
+  address: "Spin & Dry Fabric Care Studio, 14th Cross Rd, Narayana Nagar 1st Block, Konanakunte, Bengaluru, Karnataka 560062",
   hours: [
     { days: "Monday – Saturday", time: "8:00 – 20:00" },
     { days: "Sunday", time: "9:00 – 14:00 (pickup only)" },
   ],
-  /** Studio coordinates used for the 10 km pickup radius calculation. */
-  coords: { lat: 12.9784, lng: 77.6408 },
+  /** Studio coordinates used for the 10 km pickup radius calculation (SPIN & DRY Google Maps Pin: 12.880174, 77.5517447). */
+  coords: { lat: 12.880174, lng: 77.5517447 },
+  mapsUrl: "https://www.google.com/maps/place/SPIN+%26+DRY/@12.8836445,77.5566771,15.75z/data=!4m6!3m5!1s0x3bae3f00682a2cb3:0x23c196b443a7e253!8m2!3d12.880174!4d77.5517447!16s%2Fg%2F11yg3hg7kq",
   pickupRadiusKm: 10,
   founded: 2013,
   stats: [
@@ -38,40 +39,40 @@ export const testimonials = [
     quote:
       "Our 14-foot living room drapes came back with the pleats intact and no shrinkage. The pickup team re-hung them the same evening.",
     name: "Ananya R.",
-    role: "Villa owner, Whitefield",
+    role: "Villa owner, Kanakapura Road",
   },
   {
     quote:
       "We move 400 pieces of linen a week. Spin & Dry has never missed a delivery window in two years of service.",
     name: "Rakesh Menon",
-    role: "Housekeeping Manager, boutique hotel",
+    role: "Housekeeping Manager, JP Nagar Hotel",
   },
   {
     quote:
       "They inspected the carpet, told me exactly which stains would lift and which would not, then delivered on that. Rare honesty.",
     name: "Priya Kulkarni",
-    role: "Interior designer",
+    role: "Interior designer, Jayanagar",
   },
   {
     quote:
       "Comforters and quilts return dry, lofted and odour free. Booking takes under two minutes.",
     name: "Sandeep V.",
-    role: "Apartment resident, Koramangala",
+    role: "Apartment resident, Konanakunte",
   },
 ] as const;
 
 export const generalFaqs = [
   {
     q: "Which areas do you cover for pickup and delivery?",
-    a: "Spin & Dry offers free pickup and delivery within a 10 km radius of our studio. You can confirm your address instantly during booking — the address is checked against the 10 km service radius before you confirm. Outside 10 km, we still accept consultations, bulk commercial contracts and special requests.",
+    a: "Spin & Dry offers free doorstep pickup and delivery within a 10 km radius of our Konanakunte studio (covering Narayana Nagar, JP Nagar, Jayanagar, Banashankari, BTM Layout, Bannerghatta Road, Basavanagudi & surrounding hubs). Address distance is validated against our 10 km service radius while you book.",
   },
   {
     q: "How long does an order take?",
-    a: "Standard turnaround is 48 hours for household linen and blankets. Curtains, carpets, sofa covers and quilts typically take 72 hours because they require inspection, controlled drying and finishing. Express handling is available on request.",
+    a: "Standard turnaround is 48 hours for household linen and blankets. Curtains, carpets, sofa covers and quilts typically take 72 hours because they require inspection, controlled drying and finishing. Express 24-hour handling is available on request.",
   },
   {
     q: "Do you offer wet cleaning?",
-    a: "No. Spin & Dry does not provide wet cleaning. We use professional laundering, fabric-specific detergent programmes, controlled temperature drying and finishing equipment.",
+    a: "No. Spin & Dry does not provide generic wet cleaning. We use professional laundering, fabric-specific detergent programmes, controlled temperature drying and finishing equipment.",
   },
   {
     q: "How is pricing decided?",
@@ -79,7 +80,7 @@ export const generalFaqs = [
   },
   {
     q: "Is my booking payment collected online?",
-    a: "Today, payment is collected on delivery by card, UPI or bank transfer. The booking system is built to add online payment at checkout, so prepaid orders can be enabled without changing your booking flow.",
+    a: "Payment is collected on delivery by UPI, card, or bank transfer. Every order receives a digital itemized receipt before processing.",
   },
   {
     q: "Do you handle commercial and hotel volumes?",

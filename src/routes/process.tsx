@@ -28,31 +28,31 @@ export const Route = createFileRoute("/process")({
 function ProcessPage() {
   return (
     <div>
-      <header className="border-b border-border px-5 py-16 md:px-10 md:py-24">
+      <header className="border-b border-border px-5 py-8 md:px-10 md:py-14">
         <div className="mx-auto max-w-[88rem]">
           <p className="eyebrow text-brass">Process</p>
-          <h1 className="mt-4 max-w-3xl font-display text-5xl leading-[0.95] md:text-7xl">
+          <h1 className="mt-3 max-w-3xl font-display text-4xl leading-[0.95] md:text-6xl">
             From your door to the studio and back, in six stages
           </h1>
-          <p className="mt-6 max-w-2xl text-lg text-ink-soft">
+          <p className="mt-4 max-w-2xl text-base text-ink-soft">
             Every order follows the same documented sequence. You always know where your fabrics
             are, what they will cost and when they return.
           </p>
         </div>
       </header>
 
-      <section className="border-b border-border px-5 py-16 md:px-10 md:py-24">
+      <section className="border-b border-border px-5 py-10 md:px-10 md:py-14">
         <ol className="mx-auto max-w-[88rem]">
           {journey.map((j, i) => (
             <Reveal
               as="li"
               key={j.step}
-              delay={i * 60}
-              className="grid gap-6 border-t border-border py-10 md:grid-cols-[6rem_1fr_1.2fr] md:items-baseline md:gap-12"
+              delay={i * 40}
+              className="grid gap-4 border-t border-border py-7 md:grid-cols-[5rem_1fr_1.2fr] md:items-baseline md:gap-8"
             >
-              <span className="font-display text-5xl text-brass">{j.step}</span>
-              <h2 className="font-display text-3xl">{j.title}</h2>
-              <p className="text-ink-soft">{j.body}</p>
+              <span className="font-display text-4xl text-brass">{j.step}</span>
+              <h2 className="font-display text-2xl md:text-3xl">{j.title}</h2>
+              <p className="text-sm text-ink-soft">{j.body}</p>
             </Reveal>
           ))}
         </ol>
@@ -67,7 +67,7 @@ function ProcessPage() {
           loading="lazy"
           className="h-full w-full object-cover"
         />
-        <div className="px-5 py-16 md:px-14 md:py-24">
+        <div className="px-5 py-10 md:px-12 md:py-16">
           <p className="eyebrow text-brass">Policies, stated plainly</p>
           <h2 className="mt-4 font-display text-4xl">What you can count on</h2>
           <dl className="mt-10 grid gap-8">

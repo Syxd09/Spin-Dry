@@ -1,22 +1,24 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Search, Sparkles, ShieldCheck, Check } from "lucide-react";
 import { services, serviceCategories } from "@/data/services";
 import { Reveal } from "@/components/site/Reveal";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/services/")({
   head: () => ({
     meta: [
-      { title: "Fabric Care Services — Curtains, Carpets & Linen | Spin & Dry" },
+      { title: "Fabric Care Services — Curtains, Carpets & Luxury Linen | Spin & Dry" },
       {
         name: "description",
         content:
-          "16 professional fabric care services: curtain, carpet, blanket, sofa cover, bedsheet, comforter, duvet, pillow, cushion, quilt, table linen, home linen, commercial and hotel linen cleaning.",
+          "Explore 16 specialist fabric care services: curtain & drape cleaning, hand-knotted rug restoration, silk sarees, goose down quilts, sofa covers & hotel commercial linen.",
       },
       { property: "og:title", content: "Fabric Care Services — Spin & Dry" },
       {
         property: "og:description",
         content:
-          "Professional cleaning for household and commercial fabrics, with free pickup and delivery within 10 km.",
+          "Professional fabric care for household and commercial textiles in Bengaluru, with free pickup and delivery within 10 km.",
       },
       { property: "og:url", content: "/services" },
     ],
@@ -26,80 +28,149 @@ export const Route = createFileRoute("/services/")({
 });
 
 function ServicesIndex() {
+  const [query, setQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
+
+  const filtered = services.filter((s) => {
+    const matchesCat = activeCategory === "All" || s.category === activeCategory;
+    const matchesSearch =
+      s.name.toLowerCase().includes(query.toLowerCase()) ||
+      s.summary.toLowerCase().includes(query.toLowerCase()) ||
+      s.materials.some((m) => m.toLowerCase().includes(query.toLowerCase()));
+    return matchesCat && matchesSearch;
+  });
+
   return (
     <div>
-      <header className="border-b border-border px-5 py-16 md:px-10 md:py-24">
+      {/* Header */}
+      <header className="border-b border-border bg-ink px-5 py-8 text-background md:px-10 md:py-14">
         <div className="mx-auto max-w-[88rem]">
-          <p className="eyebrow text-brass">Services</p>
-          <h1 className="mt-4 max-w-3xl font-display text-5xl leading-[0.95] md:text-7xl">
-            Sixteen fabric programmes, one standard of care
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-brass" />
+            <span className="eyebrow text-brass">Master Catalog</span>
+          </div>
+          <h1 className="mt-4 max-w-4xl font-display text-5xl leading-[0.95] md:text-7xl">
+            Sixteen fabric programmes, one uncompromising standard
           </h1>
-          <p className="mt-6 max-w-2xl text-lg text-ink-soft">
-            Each fabric type gets its own inspection criteria, wash chemistry, drying profile and
-            finishing method. Choose a service to see exactly what is included, which materials we
-            handle and how the process runs.
+          <p className="mt-6 max-w-2xl text-lg text-background/80 leading-relaxed">
+            Each fabric construction requires its own inspection protocol, wash chemistry, temperature curve and finishing technique. Explore our specialist care programmes below.
           </p>
+
+          {/* Search & Filter Controls */}
+          <div className="mt-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-background/50" />
+              <input
+                type="text"
+                placeholder="Search by fabric, material (silk, wool, velvet)..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full rounded border border-background/20 bg-background/10 py-3.5 pl-11 pr-4 text-sm text-background placeholder:text-background/50 focus:border-brass focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {["All", ...serviceCategories].map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setActiveCategory(cat)}
+                  className={cn(
+                    "rounded px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all",
+                    activeCategory === cat
+                      ? "bg-brass text-ink font-bold shadow-md"
+                      : "bg-background/10 text-background/80 hover:bg-background/20",
+                  )}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </header>
 
-      {serviceCategories.map((cat) => {
-        const list = services.filter((s) => s.category === cat);
-        return (
-          <section key={cat} className="border-b border-border px-5 py-14 md:px-10 md:py-20">
-            <div className="mx-auto max-w-[88rem]">
-              <div className="flex items-baseline justify-between gap-6">
-                <h2 className="font-display text-3xl md:text-4xl">{cat}</h2>
-                <span className="eyebrow text-muted-foreground">{list.length} services</span>
-              </div>
-              <ul className="mt-10 grid gap-px bg-border md:grid-cols-2 lg:grid-cols-3">
-                {list.map((s, i) => (
-                  <Reveal as="li" key={s.slug} delay={i * 60} className="bg-background">
-                    <Link
-                      to="/services/$slug"
-                      params={{ slug: s.slug }}
-                      className="group flex h-full flex-col justify-between gap-8 p-8 transition-colors hover:bg-card"
-                    >
-                      <div>
-                        <div className="flex items-start justify-between gap-4">
-                          <h3 className="font-display text-2xl">{s.name}</h3>
-                          <ArrowUpRight
-                            className="mt-1 size-4 shrink-0 text-brass transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                            aria-hidden
-                          />
-                        </div>
-                        <p className="mt-3 text-sm leading-relaxed text-ink-soft">{s.summary}</p>
-                      </div>
-                      <span className="eyebrow text-muted-foreground">{s.turnaround}</span>
-                    </Link>
-                  </Reveal>
-                ))}
-              </ul>
+      {/* Services Grid */}
+      <section className="border-b border-border px-5 py-14 md:px-10 md:py-20">
+        <div className="mx-auto max-w-[88rem]">
+          {filtered.length === 0 ? (
+            <div className="py-20 text-center">
+              <h3 className="font-display text-3xl">No fabric services match your query</h3>
+              <p className="mt-2 text-ink-soft">Try searching for wool, silk, curtains, or reset your category filter.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setActiveCategory("All");
+                }}
+                className="mt-6 inline-block bg-ink px-6 py-3 text-xs font-semibold text-background uppercase"
+              >
+                Reset Filters
+              </button>
             </div>
-          </section>
-        );
-      })}
+          ) : (
+            <ul className="grid gap-px bg-border md:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((s, i) => (
+                <Reveal as="li" key={s.slug} delay={i * 40} className="bg-background">
+                  <Link
+                    to="/services/$slug"
+                    params={{ slug: s.slug }}
+                    className="group flex h-full flex-col justify-between p-8 transition-colors hover:bg-card"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-4">
+                        <span className="eyebrow text-brass">{s.category}</span>
+                        <ArrowUpRight
+                          className="size-4 shrink-0 text-brass transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                          aria-hidden
+                        />
+                      </div>
+                      <h2 className="mt-3 font-display text-3xl group-hover:text-brass transition-colors">
+                        {s.name}
+                      </h2>
+                      <p className="mt-3 text-sm leading-relaxed text-ink-soft">{s.summary}</p>
+                    </div>
 
+                    <div className="mt-8 border-t border-border/60 pt-4 flex items-center justify-between text-xs">
+                      <span className="font-semibold text-muted-foreground">{s.turnaround}</span>
+                      <span className="font-bold text-ink uppercase tracking-wider group-hover:text-brass">
+                        Explore Programme →
+                      </span>
+                    </div>
+                  </Link>
+                </Reveal>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      {/* Consultation Banner */}
       <section className="px-5 py-20 md:px-10">
-        <div className="mx-auto flex max-w-[88rem] flex-col items-start justify-between gap-8 border border-border bg-card p-10 md:flex-row md:items-center md:p-14">
+        <div className="mx-auto flex max-w-[88rem] flex-col items-start justify-between gap-8 border border-border bg-card p-10 md:flex-row md:items-center md:p-14 shadow-lift">
           <div>
-            <h2 className="font-display text-3xl md:text-4xl">Not sure which service you need?</h2>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-5 text-brass" />
+              <span className="eyebrow text-brass">Fabric Specialist Advice</span>
+            </div>
+            <h2 className="mt-2 font-display text-3xl md:text-4xl">Unsure which programme fits your fabric?</h2>
             <p className="mt-3 max-w-xl text-ink-soft">
-              Tell us the fabric and we will tell you the right programme — or say plainly if
-              cleaning will not fix it.
+              Tell our technicians your fabric composition, stain history, or concerns. We provide honest assessments before any work begins.
             </p>
           </div>
+
           <div className="flex flex-wrap gap-3">
             <Link
               to="/book"
-              className="bg-ink px-6 py-4 text-xs font-semibold tracking-[0.16em] text-background uppercase"
+              className="bg-ink px-7 py-4 text-xs font-semibold tracking-[0.16em] text-background uppercase shadow-sm"
             >
-              Book a pickup
+              Book a Pickup
             </Link>
             <Link
               to="/contact"
-              className="border border-ink px-6 py-4 text-xs font-semibold tracking-[0.16em] uppercase"
+              className="border border-ink px-7 py-4 text-xs font-semibold tracking-[0.16em] uppercase hover:bg-ink hover:text-background transition-colors"
             >
-              Ask a question
+              Ask a Technician
             </Link>
           </div>
         </div>

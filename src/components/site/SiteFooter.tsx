@@ -78,6 +78,11 @@ export function SiteFooter() {
                   Book a pickup
                 </Link>
               </li>
+              <li>
+                <Link to="/track" className="text-brass font-semibold hover:underline">
+                  📍 Track Order Live
+                </Link>
+              </li>
             </ul>
             <p className="eyebrow mt-8 text-brass">Hours</p>
             <ul className="mt-4 grid gap-1.5 text-sm">

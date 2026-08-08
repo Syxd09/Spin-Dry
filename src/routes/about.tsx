@@ -55,21 +55,21 @@ const pillars = [
 function AboutPage() {
   return (
     <div>
-      <header className="border-b border-border px-5 py-16 md:px-10 md:py-24">
+      <header className="border-b border-border px-5 py-8 md:px-10 md:py-14">
         <div className="mx-auto max-w-[88rem]">
           <p className="eyebrow text-brass">The studio</p>
-          <h1 className="mt-4 max-w-4xl font-display text-5xl leading-[0.95] md:text-7xl">
+          <h1 className="mt-3 max-w-4xl font-display text-4xl leading-[0.95] md:text-6xl">
             We started because good fabric kept being ruined by the wrong wash
           </h1>
-          <div className="mt-10 grid gap-10 lg:grid-cols-2">
-            <p className="text-lg leading-relaxed text-ink-soft">
+          <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            <p className="text-base leading-relaxed text-ink-soft">
               Spin &amp; Dry opened in {site.founded} as a specialist fabric care studio, not a
               neighbourhood laundry. The reason was simple: the items people care most about —
               curtains, carpets, quilts, upholstery, heirloom linen — are the items most often
               damaged by generic cleaning. Shrunken drapes, felted wool, flattened comforters,
               covers that never fit the sofa again.
             </p>
-            <p className="text-lg leading-relaxed text-ink-soft">
+            <p className="text-base leading-relaxed text-ink-soft">
               So we built the studio around inspection and process. Fabrics are identified before
               they are washed, measured before they are dried, and checked twice before they are
               packed. Twelve years later the same discipline serves households, hotels,
@@ -79,28 +79,28 @@ function AboutPage() {
         </div>
       </header>
 
-      <section className="border-b border-border px-5 py-14 md:px-10">
+      <section className="border-b border-border px-5 py-8 md:px-10">
         <dl className="mx-auto grid max-w-[88rem] gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
           {site.stats.map((s) => (
-            <div key={s.label} className="bg-background p-8">
-              <dt className="font-display text-5xl text-brass">{s.value}</dt>
-              <dd className="mt-3 text-sm text-ink-soft">{s.label}</dd>
+            <div key={s.label} className="bg-background p-6">
+              <dt className="font-display text-4xl text-brass">{s.value}</dt>
+              <dd className="mt-2 text-xs text-ink-soft">{s.label}</dd>
             </div>
           ))}
         </dl>
       </section>
 
       <section className="grid border-b border-border lg:grid-cols-[1.1fr_1fr]">
-        <div className="px-5 py-16 md:px-14 md:py-24">
+        <div className="px-5 py-10 md:px-12 md:py-16">
           <p className="eyebrow text-brass">Capability</p>
-          <h2 className="mt-4 font-display text-4xl md:text-5xl">
+          <h2 className="mt-3 font-display text-3xl md:text-4xl">
             What professional fabric care actually requires
           </h2>
-          <ul className="mt-12 grid gap-px bg-border">
+          <ul className="mt-8 grid gap-px bg-border">
             {pillars.map((p, i) => (
-              <Reveal as="li" key={p.title} delay={i * 50} className="bg-background py-7">
+              <Reveal as="li" key={p.title} delay={i * 40} className="bg-background py-5">
                 <h3 className="font-display text-2xl">{p.title}</h3>
-                <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-soft">{p.body}</p>
+                <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-ink-soft">{p.body}</p>
               </Reveal>
             ))}
           </ul>
@@ -115,13 +115,13 @@ function AboutPage() {
         />
       </section>
 
-      <section className="border-b border-border bg-ink px-5 py-16 text-background md:px-10 md:py-24">
+      <section className="border-b border-border bg-ink px-5 py-10 text-background md:px-10 md:py-16">
         <div className="mx-auto max-w-[88rem]">
           <p className="eyebrow text-brass">Who we serve</p>
-          <h2 className="mt-4 max-w-3xl font-display text-4xl md:text-5xl">
+          <h2 className="mt-3 max-w-3xl font-display text-3xl md:text-4xl">
             Households and businesses that treat fabric as an asset
           </h2>
-          <ul className="mt-12 flex flex-wrap gap-2 text-sm">
+          <ul className="mt-8 flex flex-wrap gap-2 text-xs md:text-sm">
             {[
               "Families",
               "Apartment residents",
@@ -136,7 +136,7 @@ function AboutPage() {
               "Salons & spas",
               "Clinics & wellness studios",
             ].map((a) => (
-              <li key={a} className="border border-background/25 px-4 py-2.5">
+              <li key={a} className="border border-background/25 px-3.5 py-2">
                 {a}
               </li>
             ))}
@@ -144,30 +144,30 @@ function AboutPage() {
         </div>
       </section>
 
-      <section className="px-5 py-16 md:px-10 md:py-24">
+      <section className="px-5 py-10 md:px-10 md:py-16">
         <div className="mx-auto max-w-[88rem]">
           <p className="eyebrow text-brass">Testimonials</p>
-          <h2 className="mt-4 font-display text-4xl md:text-5xl">What clients say</h2>
-          <ul className="mt-12 grid gap-px bg-border md:grid-cols-2">
+          <h2 className="mt-3 font-display text-3xl md:text-4xl">What clients say</h2>
+          <ul className="mt-8 grid gap-px bg-border md:grid-cols-2">
             {testimonials.map((t, i) => (
-              <Reveal as="li" key={t.name} delay={i * 60} className="bg-background p-9">
-                <blockquote className="font-display text-2xl leading-snug">“{t.quote}”</blockquote>
-                <p className="eyebrow mt-6 text-muted-foreground">
+              <Reveal as="li" key={t.name} delay={i * 40} className="bg-background p-7">
+                <blockquote className="font-display text-xl md:text-2xl leading-snug">“{t.quote}”</blockquote>
+                <p className="eyebrow mt-4 text-muted-foreground">
                   {t.name} — {t.role}
                 </p>
               </Reveal>
             ))}
           </ul>
-          <div className="mt-16 flex flex-wrap gap-3">
+          <div className="mt-10 flex flex-wrap gap-3">
             <Link
               to="/book"
-              className="bg-ink px-7 py-4 text-xs font-semibold tracking-[0.16em] text-background uppercase"
+              className="bg-ink px-6 py-3.5 text-xs font-semibold tracking-[0.16em] text-background uppercase"
             >
               Book a pickup
             </Link>
             <Link
               to="/services"
-              className="border border-ink px-7 py-4 text-xs font-semibold tracking-[0.16em] uppercase"
+              className="border border-ink px-6 py-3.5 text-xs font-semibold tracking-[0.16em] uppercase"
             >
               See all services
             </Link>
