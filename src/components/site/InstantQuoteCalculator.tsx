@@ -79,8 +79,10 @@ const categories: PricingCategory[] = [
   },
 ];
 
+const defaultCategory = categories[0] as PricingCategory;
+
 export function InstantQuoteCalculator() {
-  const [selectedCat, setSelectedCat] = useState<PricingCategory>(categories[0]);
+  const [selectedCat, setSelectedCat] = useState<PricingCategory>(defaultCategory);
   const [qty, setQty] = useState<number>(4);
   const [isExpress, setIsExpress] = useState<boolean>(false);
 

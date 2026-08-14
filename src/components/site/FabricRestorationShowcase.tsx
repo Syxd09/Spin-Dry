@@ -65,8 +65,10 @@ const caseStudies: CaseStudy[] = [
   },
 ];
 
+const defaultCaseStudy = caseStudies[0] as CaseStudy;
+
 export function FabricRestorationShowcase() {
-  const [activeTab, setActiveTab] = useState<CaseStudy>(caseStudies[0]);
+  const [activeTab, setActiveTab] = useState<CaseStudy>(defaultCaseStudy);
 
   return (
     <section className="border-b border-border bg-ink px-5 py-20 text-background md:px-10 md:py-28">
