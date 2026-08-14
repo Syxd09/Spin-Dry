@@ -71,9 +71,15 @@ import { cn } from "@/lib/utils";
 
 const AUTH_KEY = "spinanddry.admin_auth";
 
-// Default admin credentials
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "spinanddry123";
+const ADMIN_USER_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; // SHA-256 of "admin"
+const ADMIN_PASS_HASH = "c7bd452a9a4081cf2b717e4f2dd29ecd678e50e9dbea3b32dd8877c3aeb39579"; // SHA-256 of "spinanddry123"
+
+async function sha256(message: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -160,10 +166,13 @@ function AdminPage() {
     setSelectedRefs([]);
   }
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setAuthError("");
-    if (usernameInput.trim() === ADMIN_USER && passwordInput === ADMIN_PASS) {
+    const userHash = await sha256(usernameInput.trim());
+    const passHash = await sha256(passwordInput);
+
+    if (userHash === ADMIN_USER_HASH && passHash === ADMIN_PASS_HASH) {
       localStorage.setItem(AUTH_KEY, "true");
       setIsAuthenticated(true);
       setOrders(getStoredOrders());
