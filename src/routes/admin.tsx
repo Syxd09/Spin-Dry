@@ -44,6 +44,8 @@ import {
   Home,
   Megaphone,
   Navigation,
+  ArrowLeftRight,
+  Image as ImageIcon,
 } from "lucide-react";
 import { site } from "@/data/site";
 import { services as defaultServices, Service } from "@/data/services";
@@ -52,6 +54,7 @@ import {
   OrderStatus,
   PaymentStatus,
   CMSData,
+  BeforeAfterItem,
   TestimonialItem,
   JourneyStepItem,
   StudioSettings,
@@ -91,7 +94,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type SidebarTab = "orders" | "analytics" | "services" | "testimonials" | "process" | "settings";
+type SidebarTab = "orders" | "analytics" | "services" | "gallery" | "testimonials" | "process" | "settings";
 
 const statusPipeline: OrderStatus[] = [
   "Pending Intake",
@@ -372,6 +375,7 @@ function AdminPage() {
               { id: "orders", label: "Orders & Logistics", icon: LayoutDashboard, badge: metrics.activeOrders },
               { id: "analytics", label: "Analytics & Revenue", icon: BarChart3 },
               { id: "services", label: "Services Catalog", icon: Tag, badge: cms.services.length },
+              { id: "gallery", label: "Before/After Gallery", icon: ArrowLeftRight, badge: (cms.beforeAfterGallery || []).length },
               { id: "testimonials", label: "Client Reviews", icon: MessageCircle, badge: cms.testimonials.length },
               { id: "process", label: "Process Steps", icon: Sliders, badge: cms.journey.length },
               { id: "settings", label: "Studio Settings", icon: Settings },
@@ -448,6 +452,7 @@ function AdminPage() {
               {activeTab === "orders" && "Operations & OMS"}
               {activeTab === "analytics" && "Executive Intelligence"}
               {activeTab === "services" && "Catalog Management"}
+              {activeTab === "gallery" && "Visual Proof & Gallery"}
               {activeTab === "testimonials" && "Social Proof & Reviews"}
               {activeTab === "process" && "Customer Journey Steps"}
               {activeTab === "settings" && "Studio Contact & Hours"}
@@ -456,6 +461,7 @@ function AdminPage() {
               {activeTab === "orders" && "Orders & Logistics Command"}
               {activeTab === "analytics" && "Revenue & Operations Analytics"}
               {activeTab === "services" && "Fabric Care Services Manager"}
+              {activeTab === "gallery" && "Before & After Restoration Manager"}
               {activeTab === "testimonials" && "Client Testimonials Manager"}
               {activeTab === "process" && "6-Step Process Journey Manager"}
               {activeTab === "settings" && "Studio Settings & Information"}
@@ -927,6 +933,14 @@ function AdminPage() {
           />
         )}
 
+        {/* TAB CONTENT: BEFORE/AFTER GALLERY CMS */}
+        {activeTab === "gallery" && (
+          <BeforeAfterGalleryCMSSection
+            gallery={cms.beforeAfterGallery}
+            onUpdate={(updatedGallery) => handleSaveCMSData({ ...cms, beforeAfterGallery: updatedGallery })}
+          />
+        )}
+
         {/* TAB CONTENT: PROCESS JOURNEY CMS */}
         {activeTab === "process" && (
           <ProcessCMSSection
@@ -1142,6 +1156,163 @@ function ServiceInlineEditor({
         >
           Save
         </button>
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// CMS SECTION: BEFORE/AFTER GALLERY MANAGEMENT
+// -------------------------------------------------------------
+function BeforeAfterGalleryCMSSection({
+  gallery,
+  onUpdate,
+}: {
+  gallery: BeforeAfterItem[];
+  onUpdate: (items: BeforeAfterItem[]) => void;
+}) {
+  const [list, setList] = useState<BeforeAfterItem[]>([...(gallery || [])]);
+  const [title, setTitle] = useState("");
+  const [serviceName, setServiceName] = useState("");
+  const [beforeImage, setBeforeImage] = useState("");
+  const [afterImage, setAfterImage] = useState("");
+  const [description, setDescription] = useState("");
+
+  function handleAdd() {
+    if (!title || !beforeImage || !afterImage) return;
+    const newItem: BeforeAfterItem = {
+      id: `ba-${Date.now()}`,
+      title,
+      serviceName: serviceName || "Fabric Restoration",
+      beforeImage,
+      afterImage,
+      description,
+    };
+    const next = [newItem, ...list];
+    setList(next);
+    onUpdate(next);
+    setTitle("");
+    setServiceName("");
+    setBeforeImage("");
+    setAfterImage("");
+    setDescription("");
+  }
+
+  function handleDelete(id: string) {
+    if (confirm("Remove this case study from the Before/After Gallery?")) {
+      const next = list.filter((i) => i.id !== id);
+      setList(next);
+      onUpdate(next);
+    }
+  }
+
+  return (
+    <div className="p-6 md:p-8 space-y-6 max-w-5xl">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-2xl font-bold text-slate-900">Before &amp; After Restoration Gallery Manager</h2>
+          <p className="text-xs text-slate-500 font-semibold">Manage interactive fabric restoration slider case studies displayed on the homepage.</p>
+        </div>
+      </div>
+
+      {/* Add New Case Study Card */}
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <h3 className="text-xs font-bold uppercase text-amber-600 tracking-wider">Add New Case Study</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase">Case Title *</label>
+            <input
+              type="text"
+              placeholder="e.g. Living Room Blackout Drapes"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 p-2 text-sm font-semibold"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase">Service Category</label>
+            <input
+              type="text"
+              placeholder="e.g. Curtain & Drape Care"
+              value={serviceName}
+              onChange={(e) => setServiceName(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 p-2 text-sm font-semibold"
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase">Before Image Path / URL *</label>
+            <input
+              type="text"
+              placeholder="/assets/curtain_before.jpg"
+              value={beforeImage}
+              onChange={(e) => setBeforeImage(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 p-2 text-sm font-mono"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase">After Image Path / URL *</label>
+            <input
+              type="text"
+              placeholder="/assets/curtain_after.jpg"
+              value={afterImage}
+              onChange={(e) => setAfterImage(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 p-2 text-sm font-mono"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-700 uppercase">Restoration Description</label>
+          <textarea
+            rows={2}
+            placeholder="Details on dirt buildup, stains removed, and fabric finish..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAdd}
+          className="bg-amber-500 text-slate-950 px-6 py-2.5 text-xs font-bold rounded-lg shadow hover:bg-amber-400"
+        >
+          Add Case Study to Gallery
+        </button>
+      </div>
+
+      {/* List of Case Studies */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {list.map((item) => (
+          <div key={item.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">{item.serviceName}</span>
+                <h4 className="font-display text-lg font-bold text-slate-900">{item.title}</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleDelete(item.id)}
+                className="text-slate-400 hover:text-rose-600 p-1"
+                title="Delete Case Study"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-600">{item.description}</p>
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+              <div className="text-[10px] font-mono text-slate-500 truncate">
+                <span className="font-bold text-slate-700 block">Before Image:</span> {item.beforeImage}
+              </div>
+              <div className="text-[10px] font-mono text-slate-500 truncate">
+                <span className="font-bold text-slate-700 block">After Image:</span> {item.afterImage}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

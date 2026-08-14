@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { ArrowRight, ArrowUpRight, ShieldCheck, Sparkles, Star, Award, CheckCircle, Clock, MapPin } from "lucide-react";
 import { services } from "@/data/services";
 import { generalFaqs, journey, site, testimonials } from "@/data/site";
 import { Reveal } from "@/components/site/Reveal";
 import { InstantQuoteCalculator } from "@/components/site/InstantQuoteCalculator";
 import { FabricRestorationShowcase } from "@/components/site/FabricRestorationShowcase";
+import { BeforeAfterSlider } from "@/components/site/BeforeAfterSlider";
+import { getStoredCMS } from "@/lib/admin-store";
 import {
   Accordion,
   AccordionContent,
@@ -67,6 +70,9 @@ const badges = [
 ];
 
 function Index() {
+  const cmsData = useMemo(() => getStoredCMS(), []);
+  const galleryItems = cmsData.beforeAfterGallery || [];
+
   return (
     <div>
       {/* Hero Section */}
@@ -170,6 +176,9 @@ function Index() {
           </Reveal>
         </div>
       </section>
+
+      {/* Interactive Before & After Slider Section */}
+      <BeforeAfterSlider items={galleryItems} />
 
       {/* Interactive Price Estimator */}
       <section className="border-b border-border bg-background px-5 py-10 md:px-10 md:py-16">

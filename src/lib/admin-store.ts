@@ -74,11 +74,21 @@ export type StudioSettings = {
   hours: { days: string; time: string }[];
 };
 
+export type BeforeAfterItem = {
+  id: string;
+  title: string;
+  serviceName: string;
+  beforeImage: string;
+  afterImage: string;
+  description: string;
+};
+
 export type CMSData = {
   services: Service[];
   testimonials: TestimonialItem[];
   journey: JourneyStepItem[];
   settings: StudioSettings;
+  beforeAfterGallery: BeforeAfterItem[];
 };
 
 const ORDERS_STORAGE_KEY = "spinanddry.bookings";
@@ -186,6 +196,25 @@ const seedOrders: AdminOrder[] = [
   },
 ];
 
+const seedBeforeAfter: BeforeAfterItem[] = [
+  {
+    id: "ba-1",
+    title: "Living Room Blackout Drapes",
+    serviceName: "Curtain & Drape Restoration",
+    beforeImage: "/assets/curtain_before.jpg",
+    afterImage: "/assets/curtain_after.jpg",
+    description: "Deep dust buildup, body oil discolouration, and grease spots completely restored to original loft and luster.",
+  },
+  {
+    id: "ba-2",
+    title: "Luxury Linen Sofa Cushion",
+    serviceName: "Upholstery & Sofa Care",
+    beforeImage: "/assets/sofa_before.jpg",
+    afterImage: "/assets/sofa_after.jpg",
+    description: "Dark coffee spillages, embedded dust rings, and fabric discoloration deep cleaned using low-moisture organic extraction.",
+  },
+];
+
 const defaultCMSData: CMSData = {
   services: initialServices,
   testimonials: initialTestimonials.map((t, idx) => ({ id: `test-${idx + 1}`, ...t })),
@@ -203,6 +232,7 @@ const defaultCMSData: CMSData = {
     founded: site.founded,
     hours: [...site.hours],
   },
+  beforeAfterGallery: seedBeforeAfter,
 };
 
 // --- ORDERS METHODS ---
