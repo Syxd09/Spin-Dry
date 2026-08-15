@@ -153,7 +153,7 @@ function TrackPage() {
       {/* Header Banner */}
       <header className="border-b border-border bg-ink px-5 py-10 text-background md:px-10 md:py-14">
         <div className="mx-auto max-w-4xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-brass/30 bg-brass/10 px-4 py-1.5 backdrop-blur-md mb-4">
+          <div className="inline-flex items-center gap-2 rounded-none border border-brass/30 bg-brass/10 px-4 py-1.5 backdrop-blur-md mb-4">
             <Sparkles className="size-3.5 text-brass" />
             <span className="eyebrow text-brass">Real-Time Logistics Tracker</span>
           </div>
@@ -169,7 +169,7 @@ function TrackPage() {
       {/* Main Search & Tracking Container */}
       <main className="mx-auto max-w-4xl px-5 py-10 md:py-14">
         {/* Search Card Form */}
-        <div className="rounded-xl border border-border bg-card p-6 shadow-lift md:p-8">
+        <div className="rounded-none border border-border bg-card p-6 shadow-lift md:p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -238,7 +238,7 @@ function TrackPage() {
 
         {/* Error Notification */}
         {errorMsg && (
-          <div className="mt-6 rounded-lg border border-destructive/40 bg-destructive/10 p-5 text-destructive flex items-start gap-3">
+          <div className="mt-6 rounded-none border border-destructive/40 bg-destructive/10 p-5 text-destructive flex items-start gap-3">
             <AlertCircle className="size-5 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold">{errorMsg}</p>
@@ -257,7 +257,7 @@ function TrackPage() {
           <div className="mt-8 space-y-6">
             {/* Live Studio Operational Alert */}
             {searchedOrder.adminAlert && (
-              <div className="rounded-xl border border-brass/60 bg-brass/10 p-5 text-foreground flex items-start gap-3.5 shadow-sm">
+              <div className="rounded-none border border-brass/60 bg-brass/10 p-5 text-foreground flex items-start gap-3.5 shadow-sm">
                 <Megaphone className="size-5 text-brass shrink-0 mt-0.5" />
                 <div>
                   <span className="eyebrow block text-brass font-bold">Studio Operational Alert</span>
@@ -269,7 +269,7 @@ function TrackPage() {
             )}
 
             {/* Status Summary Banner */}
-            <div className="rounded-xl border border-brass/50 bg-ink p-6 text-background shadow-lift">
+            <div className="rounded-none border border-brass/50 bg-ink p-6 text-background shadow-lift">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="flex items-center gap-2">
@@ -318,17 +318,53 @@ function TrackPage() {
               </div>
             </div>
 
+            {/* Thank You & Queries card for Completed Orders */}
+            {searchedOrder.status === "Completed" && (
+              <div className="rounded-none border border-emerald-300 bg-emerald-50/50 p-6 md:p-8 space-y-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 bg-emerald-100 flex items-center justify-center border border-emerald-200 rounded-none">
+                    <CheckCircle2 className="size-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-2xl font-bold text-slate-900">Thank You for Choosing Spin & Dry!</h3>
+                    <p className="text-xs text-slate-500">Your fabric care order has been successfully delivered and re-fitted.</p>
+                  </div>
+                </div>
+
+                <div className="border-t border-emerald-200 pt-4 space-y-2 text-sm text-slate-700">
+                  <p>
+                    We hope you are delighted with the restoration quality and care of your items. Every piece was inspected, washed with eco-solvent chemistry, and QC checked under studio lighting.
+                  </p>
+                  <p className="font-semibold text-slate-900">
+                    Have queries, concerns, or feedback about this delivery?
+                  </p>
+                  <p>
+                    Please call our studio at <a href={site.phoneHref} className="text-amber-600 font-bold hover:underline">{site.phone}</a> or email us at <a href={`mailto:${site.email}`} className="text-amber-600 font-bold hover:underline">{site.email}</a>. We are committed to making things right if any detail isn't perfect.
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <a
+                    href="/?writeReview=true"
+                    className="inline-flex items-center gap-2 bg-ink hover:bg-ink/90 text-background px-6 py-2.5 text-xs font-bold uppercase tracking-wider shadow-sm transition-all rounded-none"
+                  >
+                    Share Your Feedback / Write a Review <ArrowRight className="size-4" />
+                  </a>
+                </div>
+              </div>
+            )}
+
             {/* Stepper Timeline */}
-            <div className="rounded-xl border border-border bg-card p-6 md:p-8">
+            <div className="rounded-none border border-border bg-card p-6 md:p-8">
               <h3 className="eyebrow text-brass mb-6">Care Process Timeline</h3>
 
               {searchedOrder.status === "Cancelled" ? (
-                <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-foreground space-y-4">
+                <div className="rounded-none border border-destructive/40 bg-destructive/10 p-6 text-foreground space-y-4">
                   <div className="flex items-center gap-2.5 text-destructive font-bold">
                     <AlertCircle className="size-6" />
                     <h4 className="font-display text-2xl">Order Cancelled</h4>
                   </div>
-                  <div className="rounded border border-destructive/20 bg-background p-4">
+                  <div className="rounded-none border border-destructive/20 bg-background p-4">
                     <span className="eyebrow block text-destructive font-bold">Reason for Cancellation</span>
                     <p className="mt-1 text-sm font-semibold text-foreground">
                       "{searchedOrder.cancellationReason || "This order was cancelled by studio logistics or client request."}"
@@ -341,8 +377,9 @@ function TrackPage() {
               ) : (
                 <ol className="relative border-l-2 border-border/80 ml-3 space-y-8 pl-6">
                   {trackingSteps.map((step, idx) => {
-                    const isDone = idx < currentStepIdx;
-                    const isCurrent = idx === currentStepIdx;
+                    const isCompletedOrder = searchedOrder.status === "Completed";
+                    const isDone = idx < currentStepIdx || (isCompletedOrder && idx === currentStepIdx);
+                    const isCurrent = idx === currentStepIdx && !isCompletedOrder;
 
                     return (
                       <li key={step.status} className="relative">
@@ -398,7 +435,7 @@ function TrackPage() {
             </div>
 
             {/* Order Items & Fabric Protocol Summary */}
-            <div className="rounded-xl border border-border bg-card p-6 md:p-8">
+            <div className="rounded-none border border-border bg-card p-6 md:p-8">
               <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
                 <h3 className="eyebrow text-brass">Registered Items &amp; Notes</h3>
                 <span className="text-xs font-medium text-muted-foreground">
@@ -419,7 +456,7 @@ function TrackPage() {
               </ul>
 
               {searchedOrder.notes && (
-                <div className="mt-4 rounded bg-background p-4 border border-border/80">
+                <div className="mt-4 rounded-none bg-background p-4 border border-border/80">
                   <span className="eyebrow block text-brass">Technician Care Notes</span>
                   <p className="mt-1 text-xs text-ink-soft italic">"{searchedOrder.notes}"</p>
                 </div>
@@ -427,7 +464,7 @@ function TrackPage() {
             </div>
 
             {/* Support Actions */}
-            <div className="rounded-xl border border-border bg-background p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="rounded-none border border-border bg-background p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h4 className="font-display text-lg text-foreground">Questions about your order?</h4>
                 <p className="text-xs text-ink-soft">
@@ -442,13 +479,13 @@ function TrackPage() {
                   )}`}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="inline-flex items-center gap-2 bg-emerald-600 px-5 py-3 text-xs font-bold text-white rounded hover:bg-emerald-700 transition-colors"
+                  className="inline-flex items-center gap-2 bg-emerald-600 px-5 py-3 text-xs font-bold text-white rounded-none hover:bg-emerald-700 transition-colors"
                 >
                   <MessageSquare className="size-3.5" /> WhatsApp Concierge
                 </a>
                 <a
                   href={site.phoneHref}
-                  className="inline-flex items-center gap-2 border border-ink px-5 py-3 text-xs font-bold uppercase rounded hover:bg-ink hover:text-background transition-colors"
+                  className="inline-flex items-center gap-2 border border-ink px-5 py-3 text-xs font-bold uppercase rounded-none hover:bg-ink hover:text-background transition-colors"
                 >
                   <Phone className="size-3.5" /> Call Studio
                 </a>

@@ -148,7 +148,7 @@ function CoveragePage() {
           </div>
 
           {/* Location Map View */}
-          <div className="border border-border bg-card shadow-lift overflow-hidden rounded">
+          <div className="border border-border bg-card shadow-lift overflow-hidden rounded-none">
             <iframe
               title="Spin & Dry studio location"
               loading="lazy"
@@ -159,7 +159,13 @@ function CoveragePage() {
             <div className="border-t border-border p-5 bg-card">
               <p className="eyebrow text-brass">Studio Hub Address</p>
               <address className="mt-1 text-sm not-italic text-foreground font-medium">{site.address}</address>
-              <p className="mt-0.5 text-xs text-muted-foreground">Hours: Mon - Sat 8:00 AM - 8:00 PM · Sun 8:00 AM - 1:00 PM</p>
+              {site.hours && site.hours.length > 0 ? (
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Hours: {site.hours.map((h) => `${h.days} ${h.time}`).join(" · ")}
+                </p>
+              ) : (
+                <p className="mt-0.5 text-xs text-muted-foreground">Hours: Mon - Sat 8:00 AM - 8:00 PM · Sun 8:00 AM - 1:00 PM</p>
+              )}
             </div>
           </div>
         </div>

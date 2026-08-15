@@ -179,7 +179,7 @@ function ServicePage() {
           </div>
 
           {/* Service Cover Photo */}
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-slate-100 border border-border shadow-lift">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-none bg-slate-100 border border-border shadow-lift">
             <img
               src={s.image || serviceCoverFallbackImages[s.slug] || categoryCoverFallbackImages[s.category] || "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80"}
               alt={s.name}
@@ -242,7 +242,7 @@ function ServicePage() {
             <p className="mt-2 text-xs md:text-sm text-ink-soft max-w-xl">
               All prices listed below represent our base standard rates (starting from, exclusive of GST) and may vary depending on material condition, sizing, and specific details.
             </p>
-            <div className="mt-10 overflow-x-auto border border-border rounded-xl shadow-lift bg-card/5">
+            <div className="mt-10 overflow-x-auto border border-border rounded-none shadow-lift bg-card/5">
               <table className="w-full text-left text-sm">
                 <thead className="bg-card text-foreground border-b border-border font-bold uppercase text-[10px] tracking-wider">
                   <tr>
@@ -302,7 +302,7 @@ function ServicePage() {
               width={1200}
               height={1200}
               loading="lazy"
-              className="mt-10 hidden aspect-square w-full object-cover lg:block rounded-xl"
+              className="mt-10 hidden aspect-square w-full object-cover lg:block rounded-none"
             />
           </div>
           <div className="flex flex-col justify-between h-full gap-8">
@@ -319,7 +319,7 @@ function ServicePage() {
               ))}
             </Accordion>
             
-            <div className="border border-brass/25 bg-brass/5 p-6 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:border-brass/45">
+            <div className="border border-brass/25 bg-brass/5 p-6 rounded-none flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:border-brass/45">
               <div>
                 <h4 className="font-display text-lg font-bold text-slate-900">Have a specific fabric concern?</h4>
                 <p className="text-xs text-ink-soft mt-1">Speak directly with our studio conservators for specialized advice.</p>

@@ -81,6 +81,8 @@ import {
   getStoredLeads,
   deleteLead,
   updateLeadStatus,
+  generateGarmentsForOrder,
+  UniqueGarment,
 } from "@/lib/admin-store";
 import { cn } from "@/lib/utils";
 
@@ -131,6 +133,7 @@ function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
+  const [showLoginPass, setShowLoginPass] = useState(false);
   const [authError, setAuthError] = useState("");
 
   const [activeTab, setActiveTab] = useState<SidebarTab>("orders");
@@ -142,6 +145,7 @@ function AdminPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [printOrder, setPrintOrder] = useState<AdminOrder | null>(null);
+  const [printStickerOrder, setPrintStickerOrder] = useState<AdminOrder | null>(null);
 
   // CMS State
   const [cms, setCms] = useState<CMSData>(getStoredCMS());
@@ -187,7 +191,9 @@ function AdminPage() {
     const userHash = await sha256(usernameInput.trim());
     const passHash = await sha256(passwordInput);
 
-    if (userHash === ADMIN_USER_HASH && passHash === ADMIN_PASS_HASH) {
+    const currentPassHash = localStorage.getItem("spinanddry.admin_pass_hash") || ADMIN_PASS_HASH;
+
+    if (userHash === ADMIN_USER_HASH && passHash === currentPassHash) {
       localStorage.setItem(AUTH_KEY, "true");
       setIsAuthenticated(true);
       setOrders(getStoredOrders());
@@ -292,7 +298,7 @@ function AdminPage() {
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
                 placeholder="Enter admin username"
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-sm text-white placeholder:text-slate-500 focus:border-amber-500 focus:outline-none"
+                className="w-full rounded-none border border-slate-700 bg-slate-950 p-3 text-sm text-white placeholder:text-slate-500 focus:border-amber-500 focus:outline-none"
               />
             </div>
 
@@ -300,18 +306,27 @@ function AdminPage() {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
                 Password
               </label>
-              <input
-                type="password"
-                required
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-sm text-white placeholder:text-slate-500 focus:border-amber-500 focus:outline-none"
-              />
+              <div className="relative">
+                <input
+                  type={showLoginPass ? "text" : "password"}
+                  required
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full rounded-none border border-slate-700 bg-slate-950 p-3 pr-12 text-sm text-white placeholder:text-slate-500 focus:border-amber-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPass(!showLoginPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-slate-450 hover:text-white focus:outline-none"
+                >
+                  {showLoginPass ? "Hide" : "Show"}
+                </button>
+              </div>
             </div>
 
             {authError && (
-              <div className="flex items-center gap-2 rounded-lg border border-rose-800/50 bg-rose-950/60 p-3 text-xs text-rose-300">
+              <div className="flex items-center gap-2 rounded-none border border-rose-800/50 bg-rose-950/60 p-3 text-xs text-rose-300">
                 <AlertCircle className="size-4 shrink-0" />
                 <span>{authError}</span>
               </div>
@@ -319,7 +334,7 @@ function AdminPage() {
 
             <button
               type="submit"
-              className="mt-2 w-full rounded-lg bg-amber-500 py-3 text-xs font-bold text-slate-950 uppercase tracking-wider shadow-lg hover:bg-amber-400 active:scale-[0.99] transition-all"
+              className="mt-2 w-full rounded-none bg-amber-500 py-3 text-xs font-bold text-slate-950 uppercase tracking-wider shadow-lg hover:bg-amber-400 active:scale-[0.99] transition-all"
             >
               Authenticate &amp; Access Panel
             </button>
@@ -727,12 +742,16 @@ function AdminPage() {
                         return (
                           <tr
                             key={o.reference}
+                            onClick={() => {
+                              setSelectedOrder(o);
+                              setIsEditOpen(true);
+                            }}
                             className={cn(
-                              "hover:bg-slate-50/80 transition-colors border-b border-slate-100",
+                              "hover:bg-slate-50/80 transition-colors border-b border-slate-100 cursor-pointer",
                               isSelected && "bg-amber-50/40",
                             )}
                           >
-                            <td className="px-3.5 py-4 text-center">
+                            <td className="px-3.5 py-4 text-center" onClick={(e) => e.stopPropagation()}>
                               <input
                                 type="checkbox"
                                 checked={isSelected}
@@ -798,6 +817,7 @@ function AdminPage() {
                                   href={o.coords ? `https://www.google.com/maps?q=${o.coords.lat},${o.coords.lng}` : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(o.address)}`}
                                   target="_blank"
                                   rel="noreferrer noopener"
+                                  onClick={(e) => e.stopPropagation()}
                                   className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 hover:text-amber-700 bg-slate-100 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 px-2 py-0.5 rounded transition-all shadow-xs"
                                   title="Open Doorstep Navigation in Google Maps"
                                 >
@@ -815,7 +835,7 @@ function AdminPage() {
                             </td>
 
                             <td className="px-5 py-4">
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                                 <select
                                   value={o.status}
                                   onChange={(e) => handleStatusChange(o.reference, e.target.value as OrderStatus)}
@@ -871,8 +891,8 @@ function AdminPage() {
                               </span>
                             </td>
 
-                            <td className="px-5 py-4 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
+                            <td className="px-5 py-4 text-right min-w-[220px]">
+                              <div className="flex items-center justify-end gap-3" onClick={(e) => e.stopPropagation()}>
                                 <a
                                   href={getWhatsAppUrl(o)}
                                   target="_blank"
@@ -889,6 +909,14 @@ function AdminPage() {
                                   title="Print Receipt"
                                 >
                                   <Printer className="size-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setPrintStickerOrder(o)}
+                                  className="rounded p-1.5 text-amber-600 hover:bg-amber-50"
+                                  title="Print Garment Stickers"
+                                >
+                                  <Tag className="size-4" />
                                 </button>
                                 <button
                                   type="button"
@@ -1014,6 +1042,11 @@ function AdminPage() {
       {/* Printable Receipt Modal */}
       {printOrder && (
         <PrintableReceiptModal order={printOrder} onClose={() => setPrintOrder(null)} />
+      )}
+
+      {/* Printable Stickers Modal */}
+      {printStickerOrder && (
+        <PrintStickersModal order={printStickerOrder} onClose={() => setPrintStickerOrder(null)} />
       )}
     </div>
   );
@@ -1873,6 +1906,7 @@ function TestimonialsCMSSection({
   const [newQuote, setNewQuote] = useState("");
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState("");
+  const [newRating, setNewRating] = useState(5);
 
   function handleAdd() {
     if (!newQuote || !newName) return;
@@ -1881,6 +1915,7 @@ function TestimonialsCMSSection({
       quote: newQuote,
       name: newName,
       role: newRole || "Bengaluru Resident",
+      rating: newRating,
     };
     const next = [newItem, ...list];
     setList(next);
@@ -1888,6 +1923,7 @@ function TestimonialsCMSSection({
     setNewQuote("");
     setNewName("");
     setNewRole("");
+    setNewRating(5);
   }
 
   function handleDelete(id: string) {
@@ -1917,26 +1953,40 @@ function TestimonialsCMSSection({
           onChange={(e) => setNewQuote(e.target.value)}
           className="w-full rounded border border-slate-300 p-2.5 text-sm"
         />
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
           <input
             type="text"
             placeholder="Client Name (e.g. Ananya R.)"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            className="rounded border border-slate-300 p-2 text-sm"
+            className="rounded border border-slate-300 p-2 text-sm sm:col-span-1"
           />
           <input
             type="text"
             placeholder="Role / Area (e.g. Villa Owner, JP Nagar)"
             value={newRole}
             onChange={(e) => setNewRole(e.target.value)}
-            className="rounded border border-slate-300 p-2 text-sm"
+            className="rounded border border-slate-300 p-2 text-sm sm:col-span-1"
           />
+          <div className="flex items-center gap-2 border border-slate-300 rounded px-2.5 bg-white">
+            <span className="text-xs font-bold text-slate-500 uppercase">Rating:</span>
+            <select
+              value={newRating}
+              onChange={(e) => setNewRating(Number(e.target.value))}
+              className="flex-1 text-sm bg-transparent outline-none py-1.5 font-semibold text-slate-800"
+            >
+              {[5, 4, 3, 2, 1].map((n) => (
+                <option key={n} value={n}>
+                  {"★".repeat(n)} ({n} Star{n !== 1 ? "s" : ""})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <button
           type="button"
           onClick={handleAdd}
-          className="bg-amber-500 text-slate-950 px-5 py-2 text-xs font-bold rounded shadow hover:bg-amber-400"
+          className="bg-amber-500 text-slate-950 px-5 py-2.5 text-xs font-bold rounded shadow hover:bg-amber-400 transition-colors"
         >
           Add Testimonial
         </button>
@@ -1947,6 +1997,11 @@ function TestimonialsCMSSection({
         {list.map((t) => (
           <div key={t.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm flex items-start justify-between gap-4">
             <div>
+              <div className="flex items-center gap-0.5 text-amber-500 mb-2">
+                {[...Array(t.rating || 5)].map((_, idx) => (
+                  <span key={idx}>★</span>
+                ))}
+              </div>
               <blockquote className="font-display text-lg text-slate-900">“{t.quote}”</blockquote>
               <p className="mt-2 text-xs font-semibold text-slate-600">
                 {t.name} — <span className="text-amber-700">{t.role}</span>
@@ -1955,7 +2010,7 @@ function TestimonialsCMSSection({
             <button
               type="button"
               onClick={() => handleDelete(t.id)}
-              className="text-rose-500 hover:text-rose-700 p-1"
+              className="text-rose-500 hover:text-rose-700 p-1 transition-colors shrink-0"
               title="Delete Testimonial"
             >
               <Trash2 className="size-4" />
@@ -2031,6 +2086,15 @@ function StudioSettingsCMSSection({
   const [draft, setDraft] = useState<StudioSettings>({ ...settings });
   const [saved, setSaved] = useState(false);
 
+  const [currPass, setCurrPass] = useState("");
+  const [newPass, setNewPass] = useState("");
+  const [confPass, setConfPass] = useState("");
+  const [passMsg, setPassMsg] = useState({ text: "", isError: false });
+
+  const [showCurrPass, setShowCurrPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfPass, setShowConfPass] = useState(false);
+
   // Sync draft if parent settings change (e.g. after CMS reset)
   useEffect(() => {
     setDraft({ ...settings });
@@ -2049,6 +2113,38 @@ function StudioSettingsCMSSection({
     setTimeout(() => setSaved(false), 3000);
   }
 
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault();
+    setPassMsg({ text: "", isError: false });
+
+    if (!currPass || !newPass || !confPass) {
+      setPassMsg({ text: "All fields are required.", isError: true });
+      return;
+    }
+
+    if (newPass !== confPass) {
+      setPassMsg({ text: "New passwords do not match.", isError: true });
+      return;
+    }
+
+    const storedHash = localStorage.getItem("spinanddry.admin_pass_hash") || ADMIN_PASS_HASH;
+    const enteredCurrHash = await sha256(currPass);
+
+    if (enteredCurrHash !== storedHash) {
+      setPassMsg({ text: "Incorrect current password.", isError: true });
+      return;
+    }
+
+    // Save new hash
+    const newHash = await sha256(newPass);
+    localStorage.setItem("spinanddry.admin_pass_hash", newHash);
+
+    setPassMsg({ text: "Password changed successfully!", isError: false });
+    setCurrPass("");
+    setNewPass("");
+    setConfPass("");
+  }
+
   return (
     <div className="p-6 md:p-8 space-y-6 max-w-3xl">
       <div>
@@ -2056,7 +2152,7 @@ function StudioSettingsCMSSection({
         <p className="text-xs text-slate-500">Update studio phone, address, operating hours, and service radius settings.</p>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+      <div className="rounded-none border border-slate-200 bg-white p-6 shadow-sm space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-xs font-bold uppercase text-slate-700">Studio Phone Number</label>
@@ -2064,7 +2160,7 @@ function StudioSettingsCMSSection({
               type="text"
               value={draft.phone}
               onChange={(e) => setDraft({ ...draft, phone: e.target.value })}
-              className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm font-semibold"
+              className="mt-1 w-full rounded-none border border-slate-300 p-2.5 text-sm font-semibold"
             />
           </div>
           <div>
@@ -2073,7 +2169,7 @@ function StudioSettingsCMSSection({
               type="email"
               value={draft.email}
               onChange={(e) => setDraft({ ...draft, email: e.target.value })}
-              className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm"
+              className="mt-1 w-full rounded-none border border-slate-300 p-2.5 text-sm"
             />
           </div>
         </div>
@@ -2084,7 +2180,7 @@ function StudioSettingsCMSSection({
             rows={2}
             value={draft.address}
             onChange={(e) => setDraft({ ...draft, address: e.target.value })}
-            className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm"
+            className="mt-1 w-full rounded-none border border-slate-300 p-2.5 text-sm"
           />
         </div>
 
@@ -2095,7 +2191,7 @@ function StudioSettingsCMSSection({
               type="number"
               value={draft.pickupRadiusKm}
               onChange={(e) => setDraft({ ...draft, pickupRadiusKm: Number(e.target.value) })}
-              className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm font-bold text-amber-600"
+              className="mt-1 w-full rounded-none border border-slate-300 p-2.5 text-sm font-bold text-amber-600"
             />
           </div>
           <div>
@@ -2104,7 +2200,7 @@ function StudioSettingsCMSSection({
               type="number"
               value={draft.founded}
               onChange={(e) => setDraft({ ...draft, founded: Number(e.target.value) })}
-              className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm"
+              className="mt-1 w-full rounded-none border border-slate-300 p-2.5 text-sm"
             />
           </div>
         </div>
@@ -2121,7 +2217,7 @@ function StudioSettingsCMSSection({
                   updated[idx] = { ...updated[idx]!, days: e.target.value };
                   setDraft({ ...draft, hours: updated });
                 }}
-                className="rounded border border-slate-300 p-2 text-sm font-semibold"
+                className="rounded-none border border-slate-300 p-2 text-sm font-semibold"
               />
               <input
                 type="text"
@@ -2131,7 +2227,7 @@ function StudioSettingsCMSSection({
                   updated[idx] = { ...updated[idx]!, time: e.target.value };
                   setDraft({ ...draft, hours: updated });
                 }}
-                className="rounded border border-slate-300 p-2 text-sm"
+                className="rounded-none border border-slate-300 p-2 text-sm"
               />
             </div>
           ))}
@@ -2139,19 +2235,107 @@ function StudioSettingsCMSSection({
 
         <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-4">
           {saved && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-none px-3 py-1.5">
               <Check className="size-3.5" /> Settings saved — site updated!
             </span>
           )}
           <button
             type="button"
             onClick={handleSave}
-            className="ml-auto bg-amber-500 text-slate-950 px-7 py-3 text-xs font-bold rounded-lg shadow hover:bg-amber-400 transition-colors"
+            className="ml-auto bg-amber-500 text-slate-950 px-7 py-3 text-xs font-bold rounded-none shadow hover:bg-amber-400 transition-colors"
           >
             Save Studio Settings
           </button>
         </div>
       </div>
+
+      {/* Change Password Box */}
+      <form onSubmit={handlePasswordChange} className="rounded-none border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div>
+          <h3 className="font-display text-lg font-bold text-slate-900">Change Admin Password</h3>
+          <p className="text-xs text-slate-500">Update the credentials used to access the administrator panel.</p>
+        </div>
+
+        {passMsg.text && (
+          <div className={cn(
+            "p-3 text-xs font-semibold rounded-none border",
+            passMsg.isError 
+              ? "bg-rose-50 border-rose-200 text-rose-800" 
+              : "bg-emerald-50 border-emerald-200 text-emerald-800"
+          )}>
+            {passMsg.text}
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Current Password</label>
+            <div className="relative">
+              <input
+                type={showCurrPass ? "text" : "password"}
+                required
+                value={currPass}
+                onChange={(e) => setCurrPass(e.target.value)}
+                className="w-full rounded-none border border-slate-300 p-2.5 pr-12 text-sm focus:outline-none focus:border-amber-500 bg-white text-slate-900"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrPass(!showCurrPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 focus:outline-none"
+              >
+                {showCurrPass ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-700 mb-1">New Password</label>
+            <div className="relative">
+              <input
+                type={showNewPass ? "text" : "password"}
+                required
+                value={newPass}
+                onChange={(e) => setNewPass(e.target.value)}
+                className="w-full rounded-none border border-slate-300 p-2.5 pr-12 text-sm focus:outline-none focus:border-amber-500 bg-white text-slate-900"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPass(!showNewPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 focus:outline-none"
+              >
+                {showNewPass ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Confirm New Password</label>
+            <div className="relative">
+              <input
+                type={showConfPass ? "text" : "password"}
+                required
+                value={confPass}
+                onChange={(e) => setConfPass(e.target.value)}
+                className="w-full rounded-none border border-slate-300 p-2.5 pr-12 text-sm focus:outline-none focus:border-amber-500 bg-white text-slate-900"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfPass(!showConfPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 focus:outline-none"
+              >
+                {showConfPass ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-2 flex justify-end">
+          <button
+            type="submit"
+            className="bg-slate-900 text-white px-7 py-3 text-xs font-bold rounded-none shadow hover:bg-slate-800 transition-colors uppercase tracking-wider"
+          >
+            Update Password
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -2568,6 +2752,8 @@ function EditOrderDrawer({
   onSave: (order: AdminOrder) => void;
 }) {
   const [draft, setDraft] = useState<AdminOrder>({ ...order });
+  const [isStickersModalOpen, setIsStickersModalOpen] = useState(false);
+  const [singlePrintGarment, setSinglePrintGarment] = useState<any | null>(null);
 
   function updateField<K extends keyof AdminOrder>(key: K, val: AdminOrder[K]) {
     setDraft((prev) => ({ ...prev, [key]: val }));
@@ -2640,14 +2826,25 @@ function EditOrderDrawer({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase">Logistics Method</label>
+              <select
+                value={draft.logistics}
+                onChange={(e) => updateField("logistics", e.target.value as any)}
+                className="mt-1 w-full rounded-none border border-slate-300 p-2 text-sm font-semibold bg-white"
+              >
+                <option value="pickup-delivery">Doorstep Pickup</option>
+                <option value="drop-off">Studio Drop-off</option>
+              </select>
+            </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase">Date</label>
               <input
                 type="date"
                 value={draft.date}
                 onChange={(e) => updateField("date", e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 p-2 text-sm"
+                className="mt-1 w-full rounded-none border border-slate-300 p-2 text-sm font-semibold bg-white"
               />
             </div>
             <div>
@@ -2656,7 +2853,7 @@ function EditOrderDrawer({
                 type="text"
                 value={draft.slot}
                 onChange={(e) => updateField("slot", e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 p-2 text-sm"
+                className="mt-1 w-full rounded-none border border-slate-300 p-2 text-sm font-semibold bg-white"
               />
             </div>
             <div>
@@ -2664,7 +2861,7 @@ function EditOrderDrawer({
               <select
                 value={draft.paymentStatus}
                 onChange={(e) => updateField("paymentStatus", e.target.value as PaymentStatus)}
-                className="mt-1 w-full rounded-lg border border-slate-300 p-2 text-sm font-semibold"
+                className="mt-1 w-full rounded-none border border-slate-300 p-2 text-sm font-semibold bg-white"
               >
                 <option value="Pending">Pending</option>
                 <option value="Paid - UPI">Paid - UPI</option>
@@ -2758,7 +2955,203 @@ function EditOrderDrawer({
               </p>
             )}
           </div>
+
+          {/* UNIQUE GARMENT IDENTIFICATION SYSTEM */}
+          <div className="rounded-none border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-3">
+              <div>
+                <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Package className="size-5 text-amber-500" /> Garment-Level Identification
+                </h3>
+                <p className="text-xs text-slate-500">Every item in this order has a unique laundry tag code.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSinglePrintGarment(null);
+                  setIsStickersModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-none shadow-sm transition-colors focus:outline-none"
+              >
+                <Printer className="size-3.5" /> Print All Stickers
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500 uppercase font-bold">
+                    <th className="py-2 text-left">Garment Programme</th>
+                    <th className="py-2 text-center">Unit / Index</th>
+                    <th className="py-2 text-right">Unique Garment ID</th>
+                    <th className="py-2 text-right w-24">Sticker</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  {generateGarmentsForOrder(draft).map((garment) => (
+                    <tr key={garment.id} className="hover:bg-slate-50/50">
+                      <td className="py-2.5 font-bold text-slate-900">{garment.serviceName}</td>
+                      <td className="py-2.5 text-center text-slate-500">
+                        {garment.index} of {garment.totalQuantity}
+                      </td>
+                      <td className="py-2.5 text-right font-mono font-bold text-amber-650">{garment.id}</td>
+                      <td className="py-2.5 text-right">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSinglePrintGarment(garment);
+                            setIsStickersModalOpen(true);
+                          }}
+                          className="text-[10px] font-bold uppercase text-amber-600 hover:text-amber-700 underline focus:outline-none"
+                        >
+                          Print Sticker
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
+
+        {/* Modal: Printable Garment Stickers */}
+        {isStickersModalOpen && (
+          <div
+            onClick={() => {
+              setIsStickersModalOpen(false);
+              setSinglePrintGarment(null);
+            }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-xs animate-in fade-in duration-150"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-none border border-slate-200 shadow-2xl p-6 md:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto space-y-6 flex flex-col animate-in zoom-in-95 duration-150"
+            >
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div>
+                  <h3 className="font-display text-2xl font-bold text-slate-900">Garment Tag Stickers</h3>
+                  <p className="text-xs text-slate-500">Optimized layout for 2 in × 1 in (approx. 50.8 × 25.4 mm) thermal sticky labels.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsStickersModalOpen(false);
+                    setSinglePrintGarment(null);
+                  }}
+                  className="text-slate-400 hover:text-slate-600 font-bold text-lg focus:outline-none"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Selection Summary */}
+              <div className="bg-slate-50 p-4 border border-slate-200 text-xs flex justify-between items-center text-slate-700">
+                <div>
+                  <span>Printing Target: </span>
+                  <span className="font-bold text-slate-900">
+                    {singlePrintGarment 
+                      ? `Single Garment (${singlePrintGarment.id})` 
+                      : `All Garments (${generateGarmentsForOrder(draft).length} labels)`
+                    }
+                  </span>
+                </div>
+                <div>
+                  <span>Client: </span>
+                  <span className="font-bold text-slate-900">{draft.customerName}</span>
+                </div>
+              </div>
+
+              {/* Printable Stickers Sheet */}
+              <div className="border border-slate-200 p-4 bg-slate-100 flex flex-wrap gap-4 justify-center overflow-y-auto max-h-[45vh]">
+                <div id="printable-sticker-sheet" className="flex flex-wrap gap-4 justify-center bg-white p-6 shadow-inner border border-dashed border-slate-350">
+                  {/* Inline Print Stylesheets to override everything else during window.print() */}
+                  <style dangerouslySetInnerHTML={{ __html: `
+                    @media print {
+                      body * {
+                        visibility: hidden !important;
+                      }
+                      #printable-sticker-sheet, #printable-sticker-sheet * {
+                        visibility: visible !important;
+                      }
+                      #printable-sticker-sheet {
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: white !important;
+                        display: flex !important;
+                        flex-wrap: wrap !important;
+                        gap: 0.15in !important;
+                      }
+                      .sticker-card-print {
+                        width: 2in !important;
+                        height: 1in !important;
+                        border: 1px solid #000 !important;
+                        padding: 0.08in !important;
+                        box-sizing: border-box !important;
+                        page-break-inside: avoid !important;
+                        break-inside: avoid !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        justify-content: space-between !important;
+                        font-family: monospace !important;
+                        font-size: 7.5pt !important;
+                        line-height: 1.25 !important;
+                        background: white !important;
+                        color: black !important;
+                      }
+                    }
+                  `}} />
+
+                  {(singlePrintGarment ? [singlePrintGarment] : generateGarmentsForOrder(draft)).map((garment) => (
+                    <div 
+                      key={garment.id}
+                      className="sticker-card-print w-[2in] h-[1in] border border-slate-300 bg-white p-2 text-[10px] leading-tight font-mono flex flex-col justify-between shadow-xs select-all text-slate-800"
+                      title="Sticker dimensions: 2 in x 1 in"
+                    >
+                      <div className="border-b border-slate-100 pb-0.5 flex justify-between font-bold text-[8px] uppercase tracking-wider text-slate-500">
+                        <span>SPIN &amp; DRY</span>
+                        <span>#{draft.reference.replace(/[^0-9]/g, "").slice(-4)}</span>
+                      </div>
+                      <div className="space-y-0.5 my-1 text-[9px]">
+                        <div><strong>CUST:</strong> {draft.customerName.slice(0, 16)}</div>
+                        <div className="truncate"><strong>ITEM:</strong> {garment.serviceName} ({garment.index}/{garment.totalQuantity})</div>
+                        <div><strong>CONT:</strong> {draft.phone}</div>
+                      </div>
+                      <div className="bg-slate-900 text-white font-bold text-center py-0.5 text-[9px] tracking-wider uppercase">
+                        {garment.id}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsStickersModalOpen(false);
+                    setSinglePrintGarment(null);
+                  }}
+                  className="px-5 py-2.5 text-xs font-bold text-slate-700 border border-slate-300 rounded-none uppercase hover:bg-slate-50"
+                >
+                  Close Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-7 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none shadow-md transition-colors"
+                >
+                  Print Label Sticker Sheets
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-4">
           <button
@@ -3048,126 +3441,467 @@ function PrintableReceiptModal({ order, onClose }: { order: AdminOrder; onClose:
   );
 }
 
+function PrintStickersModal({
+  order,
+  onClose,
+}: {
+  order: AdminOrder;
+  onClose: () => void;
+}) {
+  const [singlePrintGarment, setSinglePrintGarment] = useState<any | null>(null);
+  
+  return (
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-xs animate-in fade-in duration-150"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-none border border-slate-200 shadow-2xl p-6 md:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto space-y-6 flex flex-col animate-in zoom-in-95 duration-150"
+      >
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div>
+            <h3 className="font-display text-2xl font-bold text-slate-900">Garment Tag Stickers</h3>
+            <p className="text-xs text-slate-500">Optimized layout for 2 in × 1 in (approx. 50.8 × 25.4 mm) thermal sticky labels.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 font-bold text-lg focus:outline-none"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Selection Summary */}
+        <div className="bg-slate-50 p-4 border border-slate-200 text-xs flex justify-between items-center text-slate-700">
+          <div>
+            <span>Printing Target: </span>
+            <span className="font-bold text-slate-900">
+              {singlePrintGarment 
+                ? `Single Garment (${singlePrintGarment.id})` 
+                : `All Garments (${generateGarmentsForOrder(order).length} labels)`
+              }
+            </span>
+          </div>
+          <div>
+            <span>Client: </span>
+            <span className="font-bold text-slate-900">{order.customerName}</span>
+          </div>
+        </div>
+
+        {/* List of garments to pick individual from if desired */}
+        <div className="flex flex-wrap gap-2 text-xs">
+          <button
+            type="button"
+            onClick={() => setSinglePrintGarment(null)}
+            className={cn(
+              "px-3 py-1.5 border font-bold uppercase tracking-wider rounded-none transition-colors",
+              singlePrintGarment === null 
+                ? "bg-slate-900 text-white border-slate-900" 
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            )}
+          >
+            All Garments
+          </button>
+          {generateGarmentsForOrder(order).map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              onClick={() => setSinglePrintGarment(g)}
+              className={cn(
+                "px-3 py-1.5 border font-mono text-[10px] rounded-none transition-colors",
+                singlePrintGarment?.id === g.id
+                  ? "bg-amber-500 text-slate-950 border-amber-500 font-bold"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+              )}
+            >
+              {g.id.split("-").slice(-2).join("-")}
+            </button>
+          ))}
+        </div>
+
+        {/* Printable Stickers Sheet */}
+        <div className="border border-slate-200 p-4 bg-slate-100 flex flex-wrap gap-4 justify-center overflow-y-auto max-h-[40vh]">
+          <div id="printable-sticker-sheet" className="flex flex-wrap gap-4 justify-center bg-white p-6 shadow-inner border border-dashed border-slate-350">
+            {/* Inline Print Stylesheets to override everything else during window.print() */}
+            <style dangerouslySetInnerHTML={{ __html: `
+              @media print {
+                body * {
+                  visibility: hidden !important;
+                }
+                #printable-sticker-sheet, #printable-sticker-sheet * {
+                  visibility: visible !important;
+                }
+                #printable-sticker-sheet {
+                  position: absolute !important;
+                  left: 0 !important;
+                  top: 0 !important;
+                  width: 100% !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                  background: white !important;
+                  display: flex !important;
+                  flex-wrap: wrap !important;
+                  gap: 0.15in !important;
+                }
+                .sticker-card-print {
+                  width: 2in !important;
+                  height: 1in !important;
+                  border: 1px solid #000 !important;
+                  padding: 0.08in !important;
+                  box-sizing: border-box !important;
+                  page-break-inside: avoid !important;
+                  break-inside: avoid !important;
+                  display: flex !important;
+                  flex-direction: column !important;
+                  justify-content: space-between !important;
+                  font-family: monospace !important;
+                  font-size: 7.5pt !important;
+                  line-height: 1.25 !important;
+                  background: white !important;
+                  color: black !important;
+                }
+              }
+            `}} />
+
+            {(singlePrintGarment ? [singlePrintGarment] : generateGarmentsForOrder(order)).map((garment) => (
+              <div 
+                key={garment.id}
+                className="sticker-card-print w-[2in] h-[1in] border border-slate-300 bg-white p-2 text-[10px] leading-tight font-mono flex flex-col justify-between shadow-xs select-all text-slate-800"
+                title="Sticker dimensions: 2 in x 1 in"
+              >
+                <div className="border-b border-slate-100 pb-0.5 flex justify-between font-bold text-[8px] uppercase tracking-wider text-slate-500">
+                  <span>SPIN &amp; DRY</span>
+                  <span>#{order.reference.replace(/[^0-9]/g, "").slice(-4)}</span>
+                </div>
+                <div className="space-y-0.5 my-1 text-[9px]">
+                  <div><strong>CUST:</strong> {order.customerName.slice(0, 16)}</div>
+                  <div className="truncate"><strong>ITEM:</strong> {garment.serviceName} ({garment.index}/{garment.totalQuantity})</div>
+                  <div><strong>CONT:</strong> {order.phone}</div>
+                </div>
+                <div className="bg-slate-900 text-white font-bold text-center py-0.5 text-[9px] tracking-wider uppercase">
+                  {garment.id}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 text-xs font-bold text-slate-700 border border-slate-300 rounded-none uppercase hover:bg-slate-50"
+          >
+            Close Preview
+          </button>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-7 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none shadow-md transition-colors"
+          >
+            Print Label Sticker Sheets
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // -------------------------------------------------------------
 // CMS SECTION: ANALYTICS & INSIGHTS
 // -------------------------------------------------------------
 function AnalyticsCMSSection({ orders }: { orders: AdminOrder[] }) {
-  const metrics = calculateMetrics(orders);
+  const [timeframe, setTimeframe] = useState<"all" | "30d" | "7d" | "today">("all");
+
+  const filteredOrders = useMemo(() => {
+    if (timeframe === "all") return orders;
+    const now = new Date();
+    return orders.filter((o) => {
+      const orderDate = new Date(o.createdAt);
+      const diffMs = now.getTime() - orderDate.getTime();
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      if (timeframe === "30d") return diffDays <= 30;
+      if (timeframe === "7d") return diffDays <= 7;
+      if (timeframe === "today") {
+        const todayStr = now.toISOString().slice(0, 10);
+        return o.createdAt.startsWith(todayStr);
+      }
+      return true;
+    });
+  }, [orders, timeframe]);
+
+  const metrics = useMemo(() => {
+    const totalOrders = filteredOrders.length;
+    const activeOrders = filteredOrders.filter((o) => o.status !== "Completed" && o.status !== "Cancelled").length;
+    const pendingIntake = filteredOrders.filter((o) => o.status === "Pending Intake").length;
+    const grossRevenue = filteredOrders
+      .filter((o) => o.status !== "Cancelled")
+      .reduce((sum, o) => sum + (o.quoteAmount || 0), 0);
+    const avgOrderValue = totalOrders > 0 ? Math.round(grossRevenue / totalOrders) : 0;
+
+    const within10kmCount = filteredOrders.filter((o) => (o.distanceKm || 0) <= 10).length;
+    const outside10kmCount = totalOrders - within10kmCount;
+
+    const commercialCount = filteredOrders.filter((o) => o.customerType === "commercial").length;
+    const residentialCount = totalOrders - commercialCount;
+
+    const expressCount = filteredOrders.filter((o) => o.isExpress).length;
+
+    // Payment metrics
+    const paymentUPI = filteredOrders.filter((o) => o.paymentStatus === "Paid - UPI").length;
+    const paymentCard = filteredOrders.filter((o) => o.paymentStatus === "Paid - Card").length;
+    const paymentCash = filteredOrders.filter((o) => o.paymentStatus === "Paid - Cash").length;
+    const paymentPending = filteredOrders.filter((o) => o.paymentStatus === "Pending").length;
+
+    // Calculate service distribution
+    const serviceMap: Record<string, { count: number; revenue: number }> = {};
+    filteredOrders.forEach((o) => {
+      if (o.status === "Cancelled") return;
+      o.items.forEach((item) => {
+        const key = item.serviceName || "Other Care";
+        if (!serviceMap[key]) {
+          serviceMap[key] = { count: 0, revenue: 0 };
+        }
+        serviceMap[key].count += item.quantity;
+        serviceMap[key].revenue += (item.quantity * item.unitPrice);
+      });
+    });
+
+    const serviceStats = Object.entries(serviceMap).map(([name, data]) => ({
+      name,
+      count: data.count,
+      revenue: data.revenue,
+    })).sort((a, b) => b.revenue - a.revenue);
+
+    return {
+      totalOrders,
+      activeOrders,
+      pendingIntake,
+      grossRevenue,
+      avgOrderValue,
+      within10kmCount,
+      outside10kmCount,
+      commercialCount,
+      residentialCount,
+      expressCount,
+      paymentUPI,
+      paymentCard,
+      paymentCash,
+      paymentPending,
+      serviceStats,
+    };
+  }, [filteredOrders]);
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-6xl">
-      <div>
-        <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">Executive Intelligence</span>
-        <h2 className="font-display text-2xl font-bold text-slate-900">Revenue &amp; Operations Analytics</h2>
-        <p className="text-xs text-slate-500">Live operational metrics, order distribution, customer ratios, and revenue insights.</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5">
+        <div>
+          <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">Executive Intelligence</span>
+          <h2 className="font-display text-2xl font-bold text-slate-900">Revenue &amp; Operations Analytics</h2>
+          <p className="text-xs text-slate-500">Live operational metrics, service statistics, and transaction analyses.</p>
+        </div>
+
+        {/* Timeframe selector */}
+        <div className="flex items-center gap-1 bg-slate-100 p-1 border border-slate-200">
+          {(["all", "30d", "7d", "today"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTimeframe(t)}
+              className={cn(
+                "px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all rounded-none",
+                timeframe === t
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              {t === "all" && "All Time"}
+              {t === "30d" && "Last 30 Days"}
+              {t === "7d" && "Last 7 Days"}
+              {t === "today" && "Today"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-none border border-slate-200 bg-white p-6 shadow-xs">
           <span className="text-xs font-bold uppercase text-slate-500">Gross Portfolio Revenue</span>
           <div className="mt-3 flex items-baseline justify-between">
             <span className="font-display text-3xl font-bold text-slate-900">₹{metrics.grossRevenue.toLocaleString()}</span>
-            <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">Live</span>
+            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 border border-emerald-200">Live</span>
           </div>
-          <p className="mt-2 text-[11px] text-slate-500">Confirmed Quotes &amp; Bookings</p>
+          <p className="mt-2 text-[11px] text-slate-500">Quotes &amp; Bookings in scope</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-none border border-slate-200 bg-white p-6 shadow-xs">
           <span className="text-xs font-bold uppercase text-slate-500">Average Order Value (AOV)</span>
           <div className="mt-3 flex items-baseline justify-between">
             <span className="font-display text-3xl font-bold text-slate-900">₹{metrics.avgOrderValue.toLocaleString()}</span>
             <span className="text-xs text-slate-400 font-mono">per booking</span>
           </div>
-          <p className="mt-2 text-[11px] text-slate-500">Across {metrics.totalOrders} total registered orders</p>
+          <p className="mt-2 text-[11px] text-slate-500">Across {metrics.totalOrders} filter matched bookings</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <span className="text-xs font-bold uppercase text-slate-500">Free Pickup Zone Coverage</span>
+        <div className="rounded-none border border-slate-200 bg-white p-6 shadow-xs">
+          <span className="text-xs font-bold uppercase text-slate-500">Express Turnaround Ratio</span>
           <div className="mt-3 flex items-baseline justify-between">
-            <span className="font-display text-3xl font-bold text-emerald-700">
-              {metrics.totalOrders > 0 ? Math.round((metrics.within10kmCount / metrics.totalOrders) * 100) : 0}%
+            <span className="font-display text-3xl font-bold text-purple-700">
+              {metrics.totalOrders > 0 ? Math.round((metrics.expressCount / metrics.totalOrders) * 100) : 0}%
             </span>
-            <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">Within 10 km</span>
+            <span className="text-[10px] font-bold text-purple-800 bg-purple-50 px-2 py-0.5 border border-purple-200">24h Express</span>
           </div>
-          <p className="mt-2 text-[11px] text-slate-500">{metrics.within10kmCount} orders within studio radius</p>
+          <p className="mt-2 text-[11px] text-slate-500">{metrics.expressCount} express care requests</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <span className="text-xs font-bold uppercase text-slate-500">Commercial Account Ratio</span>
+        <div className="rounded-none border border-slate-200 bg-white p-6 shadow-xs">
+          <span className="text-xs font-bold uppercase text-slate-500">B2B Commercial Accounts</span>
           <div className="mt-3 flex items-baseline justify-between">
             <span className="font-display text-3xl font-bold text-indigo-900">
               {metrics.totalOrders > 0 ? Math.round((metrics.commercialCount / metrics.totalOrders) * 100) : 0}%
             </span>
-            <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">Hotels &amp; Offices</span>
+            <span className="text-[10px] font-bold text-indigo-850 bg-indigo-50 px-2 py-0.5 border border-indigo-200">Commercial</span>
           </div>
-          <p className="mt-2 text-[11px] text-slate-500">{metrics.commercialCount} B2B commercial accounts</p>
+          <p className="mt-2 text-[11px] text-slate-500">{metrics.commercialCount} corporate clients</p>
         </div>
       </div>
 
-      {/* Customer Segments & Logistics Progress Bars */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Home className="size-5 text-amber-500" /> Customer Account Distribution
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Service stats card (2/3 width) */}
+        <div className="lg:col-span-2 rounded-none border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+          <h3 className="font-display text-lg font-bold text-slate-900">
+            Fabric Programme Demand &amp; Revenue Share
           </h3>
-          <div className="space-y-3">
-            <div>
-              <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                <span>Residential Households ({metrics.residentialCount})</span>
-                <span>{metrics.totalOrders > 0 ? Math.round((metrics.residentialCount / metrics.totalOrders) * 100) : 0}%</span>
-              </div>
-              <div className="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
-                <div
-                  className="h-full bg-amber-500 rounded-full"
-                  style={{ width: `${metrics.totalOrders > 0 ? (metrics.residentialCount / metrics.totalOrders) * 100 : 0}%` }}
-                />
-              </div>
+          <p className="text-xs text-slate-500">Detailed overview of order volumes and gross returns categorized by care program.</p>
+          
+          {metrics.serviceStats.length === 0 ? (
+            <p className="text-sm text-slate-400 py-10 text-center">No service item metrics found for this period.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500 uppercase font-bold">
+                    <th className="py-2.5">Fabric Care Service</th>
+                    <th className="py-2.5 text-center">Volume</th>
+                    <th className="py-2.5 text-right">Revenue</th>
+                    <th className="py-2.5 text-right w-1/3">Share</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {metrics.serviceStats.map((item) => {
+                    const share = metrics.grossRevenue > 0 ? Math.round((item.revenue / metrics.grossRevenue) * 100) : 0;
+                    return (
+                      <tr key={item.name} className="hover:bg-slate-50/50">
+                        <td className="py-3 font-semibold text-slate-900">{item.name}</td>
+                        <td className="py-3 text-center text-slate-600 font-bold">{item.count} items</td>
+                        <td className="py-3 text-right font-semibold text-slate-900">₹{item.revenue.toLocaleString()}</td>
+                        <td className="py-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="font-bold font-mono text-[10px] text-slate-500">{share}%</span>
+                            <div className="h-1.5 w-16 bg-slate-100 overflow-hidden rounded-none hidden sm:block">
+                              <div
+                                className="h-full bg-amber-500"
+                                style={{ width: `${share}%` }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
+          )}
+        </div>
 
-            <div>
-              <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                <span>Commercial Hotels &amp; Offices ({metrics.commercialCount})</span>
-                <span>{metrics.totalOrders > 0 ? Math.round((metrics.commercialCount / metrics.totalOrders) * 100) : 0}%</span>
+        {/* Side columns: Payment channels and logistics */}
+        <div className="space-y-6 lg:col-span-1">
+          {/* Payment breakdown card */}
+          <div className="rounded-none border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+            <h3 className="font-display text-lg font-bold text-slate-900">
+              Payment Status Share
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                  <span>Pending / Unpaid ({metrics.paymentPending})</span>
+                  <span>{metrics.totalOrders > 0 ? Math.round((metrics.paymentPending / metrics.totalOrders) * 100) : 0}%</span>
+                </div>
+                <div className="h-2 w-full rounded-none bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full bg-amber-500"
+                    style={{ width: `${metrics.totalOrders > 0 ? (metrics.paymentPending / metrics.totalOrders) * 100 : 0}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
-                <div
-                  className="h-full bg-indigo-600 rounded-full"
-                  style={{ width: `${metrics.totalOrders > 0 ? (metrics.commercialCount / metrics.totalOrders) * 100 : 0}%` }}
-                />
+
+              <div>
+                <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                  <span>Paid via UPI ({metrics.paymentUPI})</span>
+                  <span>{metrics.totalOrders > 0 ? Math.round((metrics.paymentUPI / metrics.totalOrders) * 100) : 0}%</span>
+                </div>
+                <div className="h-2 w-full rounded-none bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500"
+                    style={{ width: `${metrics.totalOrders > 0 ? (metrics.paymentUPI / metrics.totalOrders) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                  <span>Paid via Credit Card ({metrics.paymentCard})</span>
+                  <span>{metrics.totalOrders > 0 ? Math.round((metrics.paymentCard / metrics.totalOrders) * 100) : 0}%</span>
+                </div>
+                <div className="h-2 w-full rounded-none bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full bg-indigo-600"
+                    style={{ width: `${metrics.totalOrders > 0 ? (metrics.paymentCard / metrics.totalOrders) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                  <span>Paid via Cash ({metrics.paymentCash})</span>
+                  <span>{metrics.totalOrders > 0 ? Math.round((metrics.paymentCash / metrics.totalOrders) * 100) : 0}%</span>
+                </div>
+                <div className="h-2 w-full rounded-none bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full bg-slate-500"
+                    style={{ width: `${metrics.totalOrders > 0 ? (metrics.paymentCash / metrics.totalOrders) * 100 : 0}%` }}
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
-            <MapPin className="size-5 text-emerald-600" /> Logistics Distance Radius Breakdown
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                <span>Within 10 km Free Studio Radius ({metrics.within10kmCount})</span>
-                <span>{metrics.totalOrders > 0 ? Math.round((metrics.within10kmCount / metrics.totalOrders) * 100) : 0}%</span>
+          {/* Logistics & radius coverage */}
+          <div className="rounded-none border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+            <h3 className="font-display text-lg font-bold text-slate-900">
+              Logistics &amp; Range Coverage
+            </h3>
+            <div className="space-y-4 text-xs">
+              <div className="flex justify-between border-b border-slate-100 pb-2">
+                <span className="text-slate-500">Free Studio Zone (Within 10 km)</span>
+                <span className="font-bold text-slate-800">{metrics.within10kmCount} orders</span>
               </div>
-              <div className="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 rounded-full"
-                  style={{ width: `${metrics.totalOrders > 0 ? (metrics.within10kmCount / metrics.totalOrders) * 100 : 0}%` }}
-                />
+              <div className="flex justify-between border-b border-slate-100 pb-2">
+                <span className="text-slate-500">Extended Service Area</span>
+                <span className="font-bold text-slate-800">{metrics.outside10kmCount} orders</span>
               </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                <span>Extended Service Area ({metrics.outside10kmCount})</span>
-                <span>{metrics.totalOrders > 0 ? Math.round((metrics.outside10kmCount / metrics.totalOrders) * 100) : 0}%</span>
+              <div className="flex justify-between border-b border-slate-100 pb-2">
+                <span className="text-slate-500">Residential Clients</span>
+                <span className="font-bold text-slate-800">{metrics.residentialCount} accounts</span>
               </div>
-              <div className="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
-                <div
-                  className="h-full bg-amber-600 rounded-full"
-                  style={{ width: `${metrics.totalOrders > 0 ? (metrics.outside10kmCount / metrics.totalOrders) * 100 : 0}%` }}
-                />
+              <div className="flex justify-between">
+                <span className="text-slate-500">Commercial / Corporate</span>
+                <span className="font-bold text-slate-800">{metrics.commercialCount} accounts</span>
               </div>
             </div>
           </div>

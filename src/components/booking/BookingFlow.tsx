@@ -380,13 +380,13 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
         </p>
 
         {/* Printable Official Receipt Summary Box */}
-        <div className="mt-8 rounded-xl border border-border bg-background p-6 md:p-8 space-y-6">
+        <div className="mt-8 rounded-none border border-border bg-background p-6 md:p-8 space-y-6">
           <div className="flex items-center justify-between border-b border-border pb-4">
             <div>
               <h3 className="font-display text-xl text-foreground font-bold">Official Digital Order Receipt</h3>
               <span className="text-xs text-muted-foreground">Order Reference: #{confirmed}</span>
             </div>
-            <span className="eyebrow text-brass font-bold bg-brass/10 px-3 py-1 rounded">Inspection &amp; Quote Pending</span>
+            <span className="eyebrow text-brass font-bold bg-brass/10 px-3 py-1 rounded-none">Inspection &amp; Quote Pending</span>
           </div>
 
           <dl className="grid gap-4 text-xs sm:grid-cols-2">
@@ -853,7 +853,7 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
                           const newAddr = draft.address ? `${draft.address}, ${p.area} ${p.code}` : `${p.area}, Bengaluru ${p.code}`;
                           setDraft((d) => ({ ...d, address: newAddr, pincode: p.code }));
                         }}
-                        className="rounded border border-border bg-card px-3 py-1 text-xs hover:border-brass hover:bg-brass-soft/20"
+                        className="rounded-none border border-border bg-card px-3 py-1 text-xs hover:border-brass hover:bg-brass-soft/20"
                       >
                         + {p.area} ({p.code})
                       </button>
@@ -862,7 +862,7 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
                 </div>
 
                 {/* Prominent 1-Click GPS Auto-Fill Card */}
-                <div className="mt-6 rounded-xl border border-brass/50 bg-brass/10 p-5 space-y-3">
+                <div className="mt-6 rounded-none border border-brass/50 bg-brass/10 p-5 space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-2.5 text-foreground font-semibold text-sm">
                       <MapPin className="size-5 text-brass shrink-0" />
@@ -872,7 +872,7 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
                       type="button"
                       onClick={useMyLocation}
                       disabled={checking}
-                      className="inline-flex items-center justify-center gap-2 rounded bg-brass px-4 py-2.5 text-xs font-bold text-ink uppercase tracking-wider shadow-gold hover:bg-brass/90 transition-all disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-2 rounded-none bg-brass px-4 py-2.5 text-xs font-bold text-ink uppercase tracking-wider shadow-gold hover:bg-brass/90 transition-all disabled:opacity-50"
                     >
                       {checking ? <Loader2 className="size-4 animate-spin" /> : <MapPin className="size-4" />}
                       1-Click Auto-Fill Address
@@ -883,7 +883,7 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
                   </p>
 
                   {draft.coords && (
-                    <div className="rounded border border-border bg-card p-3 text-xs flex flex-wrap items-center justify-between gap-2">
+                    <div className="rounded-none border border-border bg-card p-3 text-xs flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <span className="font-bold text-brass uppercase">GPS Coordinates Captured:</span>{" "}
                         <code className="font-mono font-semibold">{draft.coords.lat.toFixed(5)}, {draft.coords.lng.toFixed(5)}</code>
@@ -903,7 +903,7 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
                 {draft.distanceKm !== null && (
                   <div
                     className={cn(
-                      "mt-4 rounded-xl border p-5 text-sm shadow-sm",
+                      "mt-4 rounded-none border p-5 text-sm shadow-sm",
                       inRadius ? "border-brass/60 bg-brass-soft/30" : "border-destructive/40 bg-card",
                     )}
                   >

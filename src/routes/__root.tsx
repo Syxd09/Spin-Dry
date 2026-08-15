@@ -12,6 +12,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Toaster } from "@/components/ui/sonner";
+import { useSiteSettings } from "@/lib/use-site-settings";
 
 function NotFoundComponent() {
   return (
@@ -103,36 +104,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/favicon.png" },
     ],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "LocalBusiness",
-          "@id": "https://spinanddry.com/#business",
-          name: "Spin & Dry",
-          description:
-            "Professional fabric care and laundry company specialising in curtains, carpets, blankets, sofa covers, bedding, quilts and commercial linen. Free pickup and delivery within a 10 km radius.",
-          telephone: "+91 98765 43210",
-          email: "care@spinanddry.com",
-          address: {
-            "@type": "PostalAddress",
-            streetAddress: "14th Cross Rd, Narayana Nagar 1st Block, Konanakunte",
-            addressLocality: "Bengaluru",
-            postalCode: "560062",
-            addressCountry: "IN",
-          },
-          geo: { "@type": "GeoCoordinates", latitude: 12.880174, longitude: 77.5517447 },
-          areaServed: {
-            "@type": "GeoCircle",
-            geoMidpoint: { "@type": "GeoCoordinates", latitude: 12.880174, longitude: 77.5517447 },
-            geoRadius: "10000",
-          },
-          openingHours: ["Mo-Sa 08:00-20:00", "Su 08:00-13:00"],
-          priceRange: "$$",
-        }),
-      },
-    ],
   }),
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -143,9 +114,55 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const isAdmin = router.state.location.pathname.startsWith("/admin");
+  const siteSettings = useSiteSettings();
+
+  // Format hours array to Schema specification
+  const schemaHours = siteSettings.hours && siteSettings.hours.length > 0
+    ? siteSettings.hours.map((h) => {
+        const daysMap: Record<string, string> = {
+          "Mon - Sat": "Mo-Sa",
+          "Sun": "Su",
+          "Monday - Saturday": "Mo-Sa",
+          "Sunday": "Su"
+        };
+        const cleanDays = daysMap[h.days] || h.days;
+        const cleanTime = h.time.replace(/ – /g, "-").replace(/ - /g, "-").replace(/ AM/gi, "").replace(/ PM/gi, "");
+        return `${cleanDays} ${cleanTime}`;
+      })
+    : ["Mo-Sa 08:00-20:00", "Su 08:00-13:00"];
 
   return (
     <QueryClientProvider client={queryClient}>
+      {/* Dynamic SEO Business Schema Metadata */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "@id": "https://spinanddry.com/#business",
+            name: siteSettings.name || "Spin & Dry",
+            description: siteSettings.description || "Professional fabric care and laundry studio.",
+            telephone: siteSettings.phone || "+91 98765 43210",
+            email: siteSettings.email || "care@spinanddry.com",
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: siteSettings.address || "14th Cross Rd, Narayana Nagar 1st Block, Konanakunte",
+              addressLocality: "Bengaluru",
+              postalCode: "560062",
+              addressCountry: "IN",
+            },
+            geo: { "@type": "GeoCoordinates", latitude: 12.880174, longitude: 77.5517447 },
+            areaServed: {
+              "@type": "GeoCircle",
+              geoMidpoint: { "@type": "GeoCoordinates", latitude: 12.880174, longitude: 77.5517447 },
+              geoRadius: String((siteSettings.pickupRadiusKm || 10) * 1000),
+            },
+            openingHours: schemaHours,
+            priceRange: "$$",
+          }),
+        }}
+      />
       <div className="flex min-h-screen flex-col">
         {!isAdmin && <SiteHeader />}
         <main className="flex-1">

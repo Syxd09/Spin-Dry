@@ -7,7 +7,7 @@ import { Reveal } from "@/components/site/Reveal";
 import { InstantQuoteCalculator } from "@/components/site/InstantQuoteCalculator";
 import { FabricRestorationShowcase } from "@/components/site/FabricRestorationShowcase";
 import { BeforeAfterSlider } from "@/components/site/BeforeAfterSlider";
-import { getStoredCMS } from "@/lib/admin-store";
+import { getStoredCMS, submitReview } from "@/lib/admin-store";
 import {
   Accordion,
   AccordionContent,
@@ -125,10 +125,55 @@ function HeroImageSlider({ slides }: { slides: string[] }) {
 }
 
 function Index() {
-  const cmsData = useMemo(() => getStoredCMS(), []);
-  const galleryItems = cmsData.beforeAfterGallery || [];
-  const displayServices = cmsData.services || services;
-  const heroSlides = cmsData.heroSlides || [];
+  const [cms, setCms] = useState(getStoredCMS());
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [activePopupReview, setActivePopupReview] = useState<any | null>(null);
+
+  useEffect(() => {
+    function onUpdate() {
+      setCms(getStoredCMS());
+    }
+    window.addEventListener("cms-updated", onUpdate);
+    window.addEventListener("storage", onUpdate);
+
+    // Auto-open review modal if writeReview=true query parameter is present
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("writeReview") === "true") {
+        setIsReviewOpen(true);
+        // Clear parameter from URL silently without page reload
+        const newUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    }
+
+    return () => {
+      window.removeEventListener("cms-updated", onUpdate);
+      window.removeEventListener("storage", onUpdate);
+    };
+  }, []);
+
+  const galleryItems = cms.beforeAfterGallery || [];
+  const displayServices = cms.services || services;
+  const heroSlides = cms.heroSlides || [];
+  const reviews = cms.testimonials || [];
+
+  // Autoscroll Reviews track
+  useEffect(() => {
+    if (reviews.length <= 1) return;
+    const interval = setInterval(() => {
+      const container = document.getElementById("testimonials-slider");
+      if (container) {
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        if (container.scrollLeft >= maxScroll - 10) {
+          container.scrollTo({ left: 0, behavior: "smooth" });
+        } else {
+          container.scrollBy({ left: 350, behavior: "smooth" });
+        }
+      }
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [reviews]);
 
   return (
     <div>
@@ -269,36 +314,53 @@ function Index() {
                 <Link
                   to="/services/$slug"
                   params={{ slug: s.slug }}
-                  className="group flex flex-col justify-between border-t border-border/70 py-4 px-3 transition-all duration-300 hover:bg-card hover:border-brass/40 md:flex-row md:items-center"
+                  className="group block border-t border-border/70 py-5 px-3 transition-all duration-300 hover:bg-card hover:border-brass/40"
                 >
-                  <div className="flex items-center gap-4 md:gap-6">
-                    <span className="eyebrow text-brass/80 font-mono w-6 shrink-0">
+                  <div className="grid grid-cols-[24px_64px_1fr] md:grid-cols-[32px_80px_1fr_auto] items-start gap-4 md:gap-6">
+                    {/* Index */}
+                    <span className="eyebrow text-brass/80 font-mono pt-1 text-xs md:text-sm">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <div className="size-16 md:size-20 shrink-0 overflow-hidden rounded bg-slate-100 border border-border/70 shadow-xs relative">
+
+                    {/* Image Thumbnail */}
+                    <div className="size-16 md:size-20 shrink-0 overflow-hidden bg-slate-100 border border-border/70 shadow-xs relative rounded-none">
                       <img
-                        src={s.image || serviceFallbackImages[s.slug] || "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=150&q=80"}
+                        src={(s.image && (s.image.startsWith("http") || s.image.startsWith("data:") || s.image.startsWith("/assets/"))) ? s.image : (serviceFallbackImages[s.slug] || "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=150&q=80")}
                         alt={s.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        loading="lazy"
                       />
                     </div>
-                    <div>
-                      <span className="font-display text-2xl md:text-3xl transition-colors group-hover:text-brass">
+
+                    {/* Content */}
+                    <div className="space-y-1">
+                      <span className="font-display text-xl md:text-2xl transition-colors group-hover:text-brass block leading-tight">
                         {s.name}
                       </span>
-                      <p className="mt-1 text-xs text-ink-soft max-w-xl">{s.summary}</p>
+                      <p className="text-xs text-ink-soft max-w-xl leading-relaxed hidden sm:block">
+                        {s.summary}
+                      </p>
+                      {/* Mobile summary */}
+                      <p className="text-[11px] text-ink-soft leading-normal block sm:hidden">
+                        {s.summary}
+                      </p>
                     </div>
-                  </div>
 
-                  <div className="mt-3 flex items-center justify-between gap-6 md:mt-0">
-                    <div className="text-right">
-                      <span className="eyebrow block text-muted-foreground">{s.turnaround}</span>
-                      <span className="text-xs font-semibold text-brass">View Protocol</span>
+                    {/* Metadata & Actions */}
+                    <div className="col-span-2 col-start-3 md:col-span-1 md:col-start-auto flex md:flex-col items-center md:items-end justify-between md:justify-center gap-4 mt-2 md:mt-0 pt-2 md:pt-0 border-t border-border/40 md:border-t-0">
+                      <div className="md:text-right">
+                        <span className="eyebrow block text-[10px] md:text-xs text-muted-foreground tracking-wider uppercase">
+                          {s.turnaround}
+                        </span>
+                        <span className="text-[11px] font-bold text-brass mt-0.5 block md:inline-block">
+                          View Protocol
+                        </span>
+                      </div>
+                      <ArrowUpRight
+                        className="size-4 text-brass transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 hidden md:block"
+                        aria-hidden
+                      />
                     </div>
-                    <ArrowUpRight
-                      className="size-4 text-brass transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
-                      aria-hidden
-                    />
                   </div>
                 </Link>
               </Reveal>
@@ -393,41 +455,180 @@ function Index() {
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent" />
-          <div className="absolute bottom-6 left-6 right-6 rounded bg-background/90 p-5 backdrop-blur-md border border-border/80">
+          <div className="absolute bottom-6 left-6 right-6 rounded-none bg-background/90 p-5 backdrop-blur-md border border-border/80">
             <div className="flex items-center gap-2">
               <MapPin className="size-4 text-brass" />
               <span className="eyebrow text-brass">Studio Hub Location</span>
             </div>
             <p className="mt-1.5 text-sm font-medium text-foreground">{site.address}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Studio hours: Mon - Sat 8:00 AM - 8:00 PM · Sun 8:00 AM - 1:00 PM</p>
+            {site.hours && site.hours.length > 0 ? (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Studio hours: {site.hours.map((h) => `${h.days} ${h.time}`).join(" · ")}
+              </p>
+            ) : (
+              <p className="mt-0.5 text-xs text-muted-foreground">Studio hours: Mon - Sat 8:00 AM - 8:00 PM · Sun 8:00 AM - 1:00 PM</p>
+            )}
           </div>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="border-b border-border px-5 py-10 md:px-10 md:py-16">
+      <section className="border-b border-border px-5 py-12 md:px-10 md:py-20 bg-slate-50/30">
         <div className="mx-auto max-w-[88rem]">
-          <p className="eyebrow text-brass">Client Testimonials</p>
-          <h2 className="mt-3 max-w-2xl font-display text-3xl leading-tight md:text-4xl">
-            Trusted by Bengaluru's finest residences &amp; boutiques
-          </h2>
+          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end mb-10">
+            <div>
+              <p className="eyebrow text-brass">Client Testimonials</p>
+              <h2 className="mt-3 max-w-2xl font-display text-3xl leading-tight md:text-4xl text-ink">
+                Trusted by Bengaluru's finest residences &amp; boutiques
+              </h2>
+            </div>
+            {/* Slider Nav Buttons & Add Review Trigger */}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsReviewOpen(true)}
+                className="bg-ink hover:bg-ink/90 text-background px-5 py-2.5 text-xs font-bold uppercase tracking-[0.16em] rounded-none shadow-sm transition-all"
+              >
+                Write a Review
+              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const container = document.getElementById("testimonials-slider");
+                    if (container) {
+                      container.scrollBy({ left: -350, behavior: "smooth" });
+                    }
+                  }}
+                  className="flex size-10 items-center justify-center border border-border bg-background text-ink hover:bg-brass hover:text-ink transition-colors shadow-xs rounded-none"
+                  aria-label="Previous reviews"
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const container = document.getElementById("testimonials-slider");
+                    if (container) {
+                      container.scrollBy({ left: 350, behavior: "smooth" });
+                    }
+                  }}
+                  className="flex size-10 items-center justify-center border border-border bg-background text-ink hover:bg-brass hover:text-ink transition-colors shadow-xs rounded-none"
+                  aria-label="Next reviews"
+                >
+                  →
+                </button>
+              </div>
+            </div>
+          </div>
 
-          <ul className="mt-10 grid gap-px bg-border md:grid-cols-2">
-            {testimonials.map((t, i) => (
-              <Reveal as="li" key={t.name} delay={i * 50} className="bg-background p-7">
-                <div className="flex items-center gap-1 text-brass mb-3">
+          {/* Slider Container */}
+          <div
+            id="testimonials-slider"
+            className="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {reviews.map((t) => {
+              const isLong = t.quote.length > 140;
+              const displayQuote = isLong ? t.quote.slice(0, 140) + "..." : t.quote;
+
+              return (
+                <div
+                  key={t.id}
+                  className="w-full sm:w-[450px] shrink-0 snap-start bg-background border border-border/80 p-7 rounded-none shadow-xs hover:border-brass/40 transition-all flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center gap-1 text-brass mb-4">
+                      {[...Array(5)].map((_, idx) => (
+                        <Star
+                          key={idx}
+                          className={`size-4 ${idx < (t.rating || 5) ? "fill-brass text-brass" : "text-slate-300"}`}
+                        />
+                      ))}
+                    </div>
+                    <blockquote className="font-display text-lg md:text-xl leading-relaxed text-ink italic">
+                      “{displayQuote}”
+                    </blockquote>
+                    {isLong && (
+                      <button
+                        type="button"
+                        onClick={() => setActivePopupReview(t)}
+                        className="mt-2 text-xs font-bold text-brass hover:underline focus:outline-none"
+                      >
+                        See More
+                      </button>
+                    )}
+                  </div>
+                  <p className="eyebrow mt-6 text-ink-soft text-xs">
+                    {t.name} — <span className="text-brass font-bold">{t.role}</span>
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Modal: Read Full Review */}
+        {activePopupReview && (
+          <div
+            onClick={() => setActivePopupReview(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-xs animate-in fade-in duration-150"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-none shadow-2xl p-6 md:p-8 max-w-lg w-full space-y-4 border border-slate-200 animate-in zoom-in-95 duration-150"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-amber-500">
                   {[...Array(5)].map((_, idx) => (
-                    <Star key={idx} className="size-3.5 fill-brass text-brass" />
+                    <Star
+                      key={idx}
+                      className={`size-4 ${idx < (activePopupReview.rating || 5) ? "fill-amber-500 text-amber-500" : "text-slate-200"}`}
+                    />
                   ))}
                 </div>
-                <blockquote className="font-display text-xl md:text-2xl leading-snug text-foreground">“{t.quote}”</blockquote>
-                <p className="eyebrow mt-4 text-muted-foreground">
-                  {t.name} — <span className="text-foreground">{t.role}</span>
-                </p>
-              </Reveal>
-            ))}
-          </ul>
-        </div>
+                <button
+                  type="button"
+                  onClick={() => setActivePopupReview(null)}
+                  className="text-slate-400 hover:text-slate-600 font-bold text-sm"
+                >
+                  ✕
+                </button>
+              </div>
+              <blockquote className="font-display text-xl leading-relaxed text-slate-800 italic">
+                “{activePopupReview.quote}”
+              </blockquote>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                {activePopupReview.name} — <span className="text-amber-600 font-display">{activePopupReview.role}</span>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Write a Review Form */}
+        {isReviewOpen && (
+          <div
+            onClick={() => setIsReviewOpen(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-xs animate-in fade-in duration-150"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-none shadow-2xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-4 border border-slate-200 animate-in zoom-in-95 duration-150"
+            >
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 className="font-display text-2xl font-bold text-slate-900">Write a Review</h3>
+                <button
+                  type="button"
+                  onClick={() => setIsReviewOpen(false)}
+                  className="text-slate-400 hover:text-slate-600 font-bold text-lg"
+                >
+                  ✕
+                </button>
+              </div>
+              <SubmitReviewForm onClose={() => setIsReviewOpen(false)} />
+            </div>
+          </div>
+        )}
       </section>
 
       {/* FAQ */}
@@ -494,5 +695,107 @@ function Index() {
         </div>
       </section>
     </div>
+  );
+}
+
+function SubmitReviewForm({ onClose }: { onClose?: () => void }) {
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [quote, setQuote] = useState("");
+  const [rating, setRating] = useState(5);
+  const [submitted, setSubmitted] = useState(false);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name || !quote) {
+      alert("Name and Review fields are required!");
+      return;
+    }
+    submitReview({
+      name,
+      role: role || "Verified Client",
+      quote,
+      rating,
+    });
+    setSubmitted(true);
+    setName("");
+    setRole("");
+    setQuote("");
+    setRating(5);
+    setTimeout(() => {
+      setSubmitted(false);
+      onClose?.();
+    }, 1500);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-4 space-y-4 text-left">
+      {submitted && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-none p-3 text-xs font-semibold">
+          ✓ Thank you! Your review has been submitted and is now live on our homepage.
+        </div>
+      )}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">Your Name *</label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Rahul S."
+            className="w-full rounded-none border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-amber-500"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">Role / Area (Optional)</label>
+          <input
+            type="text"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            placeholder="e.g. JP Nagar Resident"
+            className="w-full rounded-none border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-amber-500"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700">Your Rating:</span>
+        <div className="flex items-center gap-1.5">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setRating(n)}
+              className="text-lg hover:scale-110 transition-transform focus:outline-none"
+              title={`${n} Stars`}
+            >
+              <Star
+                className={`size-5 ${n <= rating ? "fill-amber-500 text-amber-500" : "text-slate-300"}`}
+              />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">Your Review *</label>
+        <textarea
+          required
+          rows={3}
+          value={quote}
+          onChange={(e) => setQuote(e.target.value)}
+          placeholder="Describe your fabric care experience..."
+          className="w-full rounded-none border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-amber-500"
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-6 py-2.5 text-xs font-bold uppercase tracking-widest rounded-none shadow-sm transition-colors"
+      >
+        Submit Review
+      </button>
+    </form>
   );
 }

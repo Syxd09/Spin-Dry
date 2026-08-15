@@ -52,6 +52,7 @@ export type TestimonialItem = {
   quote: string;
   name: string;
   role: string;
+  rating: number;
 };
 
 export type JourneyStepItem = {
@@ -134,7 +135,7 @@ const seedBeforeAfter: BeforeAfterItem[] = [
 
 const defaultCMSData: CMSData = {
   services: initialServices,
-  testimonials: initialTestimonials.map((t, idx) => ({ id: `test-${idx + 1}`, ...t })),
+  testimonials: initialTestimonials.map((t, idx) => ({ id: `test-${idx + 1}`, rating: 5, ...t })),
   journey: initialJourney.map((j) => ({ ...j })),
   settings: {
     name: site.name,
@@ -524,4 +525,74 @@ export function updateLeadStatus(id: string, status: LeadStatus): ContactLead[] 
   });
   localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(updated));
   return updated;
+}
+
+export function submitReview(review: Omit<TestimonialItem, "id">): CMSData {
+  const current = getStoredCMS();
+  const newReview: TestimonialItem = {
+    ...review,
+    id: `test-${Date.now()}`,
+    rating: review.rating || 5,
+  };
+  const updatedCMS = {
+    ...current,
+    testimonials: [newReview, ...(current.testimonials || [])],
+  };
+  saveCMS(updatedCMS);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("cms-updated"));
+  }
+  return updatedCMS;
+}
+
+export function getGarmentAbbreviation(name: string): string {
+  const clean = name.toLowerCase();
+  if (clean.includes("shirt")) return "SH";
+  if (clean.includes("pant") || clean.includes("trouser") || clean.includes("jeans")) return "PT";
+  if (clean.includes("curtain")) return "CU";
+  if (clean.includes("carpet") || clean.includes("rug")) return "CP";
+  if (clean.includes("blanket") || clean.includes("quilt") || clean.includes("duvet") || clean.includes("comforter")) return "BK";
+  if (clean.includes("sofa") || clean.includes("upholstery") || clean.includes("cushion")) return "SF";
+  if (clean.includes("bedsheet") || clean.includes("sheet") || clean.includes("linen")) return "BS";
+  if (clean.includes("suit") || clean.includes("blazer")) return "ST";
+  if (clean.includes("dress") || clean.includes("frock")) return "DR";
+  if (clean.includes("towel")) return "TW";
+  if (clean.includes("saree") || clean.includes("sari")) return "SR";
+  // Fallback: first and last letters of the first word capitalized
+  const words = name.trim().split(/\s+/);
+  const firstWord = words[0] || "GM";
+  if (firstWord.length >= 2) {
+    return (firstWord[0] + firstWord[firstWord.length - 1]).toUpperCase();
+  }
+  return (firstWord + "X").slice(0, 2).toUpperCase();
+}
+
+export type UniqueGarment = {
+  id: string; // e.g. SD849201-CU-001
+  serviceName: string;
+  serviceSlug: string;
+  index: number;
+  totalQuantity: number;
+};
+
+export function generateGarmentsForOrder(order: { reference: string; items: { serviceName: string; serviceSlug: string; quantity: number }[] }): UniqueGarment[] {
+  const garments: UniqueGarment[] = [];
+  const cleanRef = order.reference.replace(/[^a-zA-Z0-9]/g, "");
+
+  order.items.forEach((item) => {
+    const abbrev = getGarmentAbbreviation(item.serviceName);
+    const qty = item.quantity || 0;
+    for (let i = 1; i <= qty; i++) {
+      const idxStr = String(i).padStart(3, "0");
+      garments.push({
+        id: `${cleanRef}-${abbrev}-${idxStr}`,
+        serviceName: item.serviceName,
+        serviceSlug: item.serviceSlug,
+        index: i,
+        totalQuantity: qty,
+      });
+    }
+  });
+
+  return garments;
 }

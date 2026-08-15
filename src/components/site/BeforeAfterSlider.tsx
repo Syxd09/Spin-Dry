@@ -85,7 +85,7 @@ export function BeforeAfterSlider({ items }: { items?: BeforeAfterItem[] }) {
         <div className="mt-14 grid gap-12 lg:grid-cols-[1.5fr_1fr]">
           <div 
             ref={containerRef}
-            className="relative h-[480px] w-full overflow-hidden select-none border border-border shadow-lg cursor-ew-resize rounded-xl bg-slate-100"
+            className="relative h-[480px] w-full overflow-hidden select-none border border-border shadow-lg cursor-ew-resize rounded-none bg-slate-100"
             onMouseDown={(e) => {
               e.preventDefault();
               isDragging.current = true;
@@ -107,7 +107,7 @@ export function BeforeAfterSlider({ items }: { items?: BeforeAfterItem[] }) {
               alt="After Restoration" 
               className="absolute inset-0 h-full w-full object-cover pointer-events-none"
             />
-            <div className="absolute top-4 right-4 z-10 rounded bg-brass/90 px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-ink uppercase backdrop-blur-xs">
+            <div className="absolute top-4 right-4 z-10 rounded-none bg-brass/90 px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-ink uppercase backdrop-blur-xs">
               After Clean (Pristine)
             </div>
 
@@ -123,7 +123,7 @@ export function BeforeAfterSlider({ items }: { items?: BeforeAfterItem[] }) {
                 style={{ width: containerRef.current?.getBoundingClientRect().width || "100%" }}
               />
             </div>
-            <div className="absolute top-4 left-4 z-10 rounded bg-ink/75 px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-white uppercase backdrop-blur-xs">
+            <div className="absolute top-4 left-4 z-10 rounded-none bg-ink/75 px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-white uppercase backdrop-blur-xs">
               Before Care (Dirty)
             </div>
 
@@ -132,7 +132,7 @@ export function BeforeAfterSlider({ items }: { items?: BeforeAfterItem[] }) {
               className="absolute inset-y-0 z-20 w-0.5 bg-brass cursor-ew-resize pointer-events-none"
               style={{ left: `${sliderPosition}%` }}
             >
-              <div className="absolute top-1/2 -left-5 -translate-y-1/2 flex size-10 items-center justify-center rounded-full border border-brass bg-ink text-brass shadow-lg cursor-ew-resize">
+              <div className="absolute top-1/2 -left-5 -translate-y-1/2 flex size-10 items-center justify-center rounded-none border border-brass bg-ink text-brass shadow-lg cursor-ew-resize">
                 <ArrowLeftRight className="size-4" />
               </div>
             </div>
@@ -168,7 +168,7 @@ export function BeforeAfterSlider({ items }: { items?: BeforeAfterItem[] }) {
                         setActiveItem(item);
                         setSliderPosition(50);
                       }}
-                      className={`text-left p-4 rounded-xl border transition-all cursor-pointer ${
+                      className={`text-left p-4 rounded-none border transition-all cursor-pointer ${
                         isActive
                           ? "border-brass bg-brass/5 shadow-xs"
                           : "border-border bg-card hover:border-brass/50 hover:bg-slate-50/50"
