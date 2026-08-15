@@ -1,23 +1,10 @@
-import { useState } from "react";
-import { Sparkles, CheckCircle2, ShieldAlert, ArrowRight } from "lucide-react";
+﻿import { useState, useEffect } from "react";
+import { Sparkles, CheckCircle2, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import heroFabric from "@/assets/hero-fabric.jpg";
-import linenStack from "@/assets/linen-stack.jpg";
-import facility from "@/assets/facility.jpg";
+import { getStoredCMS } from "@/lib/admin-store";
+import type { CaseStudy } from "@/lib/admin-store";
 
-type CaseStudy = {
-  id: string;
-  title: string;
-  category: string;
-  challenge: string;
-  solution: string;
-  result: string;
-  stats: { label: string; value: string }[];
-  image: string;
-  tags: string[];
-};
-
-const caseStudies: CaseStudy[] = [
+const defaultCaseStudies: CaseStudy[] = [
   {
     id: "silk-rug",
     title: "10x14 ft Hand-Knotted Silk & Wool Persian Rug",
@@ -30,8 +17,8 @@ const caseStudies: CaseStudy[] = [
       { label: "Dye Retention", value: "100%" },
       { label: "Processing Time", value: "72 Hours" },
     ],
-    image: heroFabric,
-    tags: ["Hand-knotted Silk", "Stain Extraction", "Fringe Restoration"],
+    image: "https://images.unsplash.com/photo-1576016770956-debb63d90029?auto=format&fit=crop&w=1200&q=80",
+    tags: "Hand-knotted Silk, Stain Extraction, Fringe Restoration",
   },
   {
     id: "velvet-drapes",
@@ -45,8 +32,8 @@ const caseStudies: CaseStudy[] = [
       { label: "Dust Extraction", value: "100%" },
       { label: "Re-hang Service", value: "Included" },
     ],
-    image: linenStack,
-    tags: ["Floor-to-Ceiling Drapes", "Zero Shrinkage", "Vertical Steam Press"],
+    image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80",
+    tags: "Floor-to-Ceiling Drapes, Zero Shrinkage, Vertical Steam Press",
   },
   {
     id: "down-duvet",
@@ -60,15 +47,42 @@ const caseStudies: CaseStudy[] = [
       { label: "Allergen Removal", value: "100%" },
       { label: "Sanitised", value: "Ozone Treated" },
     ],
-    image: facility,
-    tags: ["Goose Down", "Loft Revival", "Ozone Anti-Allergen"],
+    image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80",
+    tags: "Goose Down, Loft Revival, Ozone Anti-Allergen",
   },
 ];
 
-const defaultCaseStudy = caseStudies[0] as CaseStudy;
+function loadCaseStudies(): CaseStudy[] {
+  try {
+    const cms = getStoredCMS();
+    if (cms?.caseStudies && cms.caseStudies.length > 0) return cms.caseStudies;
+  } catch { /* ignore */ }
+  return defaultCaseStudies;
+}
 
 export function FabricRestorationShowcase() {
-  const [activeTab, setActiveTab] = useState<CaseStudy>(defaultCaseStudy);
+  const [caseStudies, setCaseStudies] = useState<CaseStudy[]>(loadCaseStudies);
+  const [activeTab, setActiveTab] = useState<CaseStudy>(caseStudies[0] ?? defaultCaseStudies[0]!);
+
+  useEffect(() => {
+    function onUpdate() {
+      const fresh = loadCaseStudies();
+      setCaseStudies(fresh);
+      setActiveTab((prev) => fresh.find((c) => c.id === prev.id) ?? fresh[0] ?? defaultCaseStudies[0]!);
+    }
+    window.addEventListener("cms-updated", onUpdate);
+    window.addEventListener("storage", onUpdate);
+    return () => {
+      window.removeEventListener("cms-updated", onUpdate);
+      window.removeEventListener("storage", onUpdate);
+    };
+  }, []);
+
+  if (caseStudies.length === 0) return null;
+
+  const tags = activeTab.tags
+    ? activeTab.tags.split(",").map((t) => t.trim()).filter(Boolean)
+    : [];
 
   return (
     <section className="border-b border-border bg-ink px-5 py-20 text-background md:px-10 md:py-28">
@@ -88,7 +102,6 @@ export function FabricRestorationShowcase() {
           </p>
         </div>
 
-        {/* Tab Selection Bar */}
         <div className="mt-12 flex flex-wrap gap-2 border-b border-background/20 pb-4">
           {caseStudies.map((cs) => (
             <button
@@ -107,9 +120,7 @@ export function FabricRestorationShowcase() {
           ))}
         </div>
 
-        {/* Case Study Content Grid */}
         <div className="mt-10 grid gap-10 lg:grid-cols-12 lg:items-center">
-          {/* Visual Showcase Box */}
           <div className="relative overflow-hidden border border-background/20 bg-background/5 p-2 lg:col-span-6">
             <div className="relative aspect-[4/3] w-full overflow-hidden">
               <img
@@ -118,17 +129,18 @@ export function FabricRestorationShowcase() {
                 className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-transparent opacity-80" />
-              <div className="absolute bottom-6 left-6 right-6 flex flex-wrap gap-2">
-                {activeTab.tags.map((t) => (
-                  <span key={t} className="rounded bg-brass/90 px-3 py-1 text-[11px] font-bold text-ink uppercase tracking-wider">
-                    {t}
-                  </span>
-                ))}
-              </div>
+              {tags.length > 0 && (
+                <div className="absolute bottom-6 left-6 right-6 flex flex-wrap gap-2">
+                  {tags.map((t) => (
+                    <span key={t} className="rounded bg-brass/90 px-3 py-1 text-[11px] font-bold text-ink uppercase tracking-wider">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Details Column */}
           <div className="space-y-6 lg:col-span-6">
             <div>
               <span className="eyebrow text-brass-soft">{activeTab.category}</span>
@@ -161,15 +173,16 @@ export function FabricRestorationShowcase() {
               </div>
             </div>
 
-            {/* Key Metrics Row */}
-            <div className="grid grid-cols-3 gap-px bg-background/20 p-px">
-              {activeTab.stats.map((s) => (
-                <div key={s.label} className="bg-ink p-4 text-center">
-                  <span className="font-display text-2xl text-brass">{s.value}</span>
-                  <span className="mt-1 block text-[11px] text-background/60 uppercase tracking-wider">{s.label}</span>
-                </div>
-              ))}
-            </div>
+            {activeTab.stats && activeTab.stats.length > 0 && (
+              <div className="grid grid-cols-3 gap-px bg-background/20 p-px">
+                {activeTab.stats.map((s) => (
+                  <div key={s.label} className="bg-ink p-4 text-center">
+                    <span className="font-display text-2xl text-brass">{s.value}</span>
+                    <span className="mt-1 block text-[11px] text-background/60 uppercase tracking-wider">{s.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

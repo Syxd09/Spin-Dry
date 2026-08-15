@@ -46,9 +46,14 @@ import {
   Navigation,
   ArrowLeftRight,
   Image as ImageIcon,
+  ArrowUp,
+  ArrowDown,
+  Inbox,
+  Mail,
+  PhoneCall,
 } from "lucide-react";
 import { site } from "@/data/site";
-import { services as defaultServices, Service } from "@/data/services";
+import { services as defaultServices, Service, servicePricingData } from "@/data/services";
 import {
   AdminOrder,
   OrderStatus,
@@ -58,6 +63,10 @@ import {
   TestimonialItem,
   JourneyStepItem,
   StudioSettings,
+  ContactLead,
+  LeadStatus,
+  CaseStudy,
+  CaseStudyStat,
   calculateMetrics,
   deleteOrder,
   getStoredOrders,
@@ -69,6 +78,9 @@ import {
   getStoredCMS,
   saveCMS,
   resetCMS,
+  getStoredLeads,
+  deleteLead,
+  updateLeadStatus,
 } from "@/lib/admin-store";
 import { cn } from "@/lib/utils";
 
@@ -94,7 +106,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type SidebarTab = "orders" | "analytics" | "services" | "gallery" | "testimonials" | "process" | "settings";
+type SidebarTab = "orders" | "analytics" | "leads" | "services" | "hero" | "gallery" | "casestudies" | "testimonials" | "process" | "settings";
 
 const statusPipeline: OrderStatus[] = [
   "Pending Intake",
@@ -196,6 +208,7 @@ function AdminPage() {
   function handleSaveCMSData(updated: CMSData) {
     saveCMS(updated);
     setCms(updated);
+    window.dispatchEvent(new Event("cms-updated"));
     setCmsSaveMsg("CMS changes saved successfully!");
     setTimeout(() => setCmsSaveMsg(""), 3000);
   }
@@ -240,14 +253,6 @@ function AdminPage() {
       const updated = deleteOrder(ref);
       setOrders(updated);
       if (selectedOrder?.reference === ref) setSelectedOrder(null);
-    }
-  }
-
-  function handleResetSeed() {
-    if (confirm("Reset all orders to initial sample demonstration data?")) {
-      const reset = resetToSeedOrders();
-      setOrders(reset);
-      setSelectedOrder(null);
     }
   }
 
@@ -374,8 +379,11 @@ function AdminPage() {
             {[
               { id: "orders", label: "Orders & Logistics", icon: LayoutDashboard, badge: metrics.activeOrders },
               { id: "analytics", label: "Analytics & Revenue", icon: BarChart3 },
+              { id: "leads", label: "Contact Leads", icon: Inbox },
               { id: "services", label: "Services Catalog", icon: Tag, badge: cms.services.length },
+              { id: "hero", label: "Hero Slideshow", icon: ImageIcon, badge: (cms.heroSlides || []).length },
               { id: "gallery", label: "Before/After Gallery", icon: ArrowLeftRight, badge: (cms.beforeAfterGallery || []).length },
+              { id: "casestudies", label: "Case Studies", icon: Sparkles, badge: (cms.caseStudies || []).length },
               { id: "testimonials", label: "Client Reviews", icon: MessageCircle, badge: cms.testimonials.length },
               { id: "process", label: "Process Steps", icon: Sliders, badge: cms.journey.length },
               { id: "settings", label: "Studio Settings", icon: Settings },
@@ -451,8 +459,11 @@ function AdminPage() {
             <span className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">
               {activeTab === "orders" && "Operations & OMS"}
               {activeTab === "analytics" && "Executive Intelligence"}
+              {activeTab === "leads" && "Customer Enquiries"}
               {activeTab === "services" && "Catalog Management"}
+              {activeTab === "hero" && "Marketing & Brand Visuals"}
               {activeTab === "gallery" && "Visual Proof & Gallery"}
+              {activeTab === "casestudies" && "Fabric Restoration Case Studies"}
               {activeTab === "testimonials" && "Social Proof & Reviews"}
               {activeTab === "process" && "Customer Journey Steps"}
               {activeTab === "settings" && "Studio Contact & Hours"}
@@ -460,8 +471,11 @@ function AdminPage() {
             <h1 className="font-display text-2xl font-bold text-slate-900 capitalize">
               {activeTab === "orders" && "Orders & Logistics Command"}
               {activeTab === "analytics" && "Revenue & Operations Analytics"}
+              {activeTab === "leads" && "Contact Form Leads"}
               {activeTab === "services" && "Fabric Care Services Manager"}
+              {activeTab === "hero" && "Homepage Hero Slideshow Manager"}
               {activeTab === "gallery" && "Before & After Restoration Manager"}
+              {activeTab === "casestudies" && "Fabric Restoration Case Studies Manager"}
               {activeTab === "testimonials" && "Client Testimonials Manager"}
               {activeTab === "process" && "6-Step Process Journey Manager"}
               {activeTab === "settings" && "Studio Settings & Information"}
@@ -479,13 +493,7 @@ function AdminPage() {
                 >
                   <Download className="size-3.5 text-emerald-600" /> Export CSV
                 </button>
-                <button
-                  type="button"
-                  onClick={handleResetSeed}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100"
-                >
-                  <RefreshCw className="size-3.5 text-amber-600" /> Reset Demo Orders
-                </button>
+
                 <button
                   type="button"
                   onClick={() => setIsCreateOpen(true)}
@@ -933,6 +941,14 @@ function AdminPage() {
           />
         )}
 
+        {/* TAB CONTENT: HERO SLIDESHOW CMS */}
+        {activeTab === "hero" && (
+          <HeroSlideshowCMSSection
+            heroSlides={cms.heroSlides || []}
+            onUpdate={(updatedSlides) => handleSaveCMSData({ ...cms, heroSlides: updatedSlides })}
+          />
+        )}
+
         {/* TAB CONTENT: BEFORE/AFTER GALLERY CMS */}
         {activeTab === "gallery" && (
           <BeforeAfterGalleryCMSSection
@@ -954,6 +970,17 @@ function AdminPage() {
           <StudioSettingsCMSSection
             settings={cms.settings}
             onUpdate={(updatedSettings) => handleSaveCMSData({ ...cms, settings: updatedSettings })}
+          />
+        )}
+
+        {/* TAB CONTENT: CONTACT LEADS */}
+        {activeTab === "leads" && <LeadsSection />}
+
+        {/* TAB CONTENT: CASE STUDIES CMS */}
+        {activeTab === "casestudies" && (
+          <CaseStudiesCMSSection
+            caseStudies={cms.caseStudies || []}
+            onUpdate={(updatedStudies) => handleSaveCMSData({ ...cms, caseStudies: updatedStudies })}
           />
         )}
       </div>
@@ -991,6 +1018,217 @@ function AdminPage() {
     </div>
   );
 }
+
+// -------------------------------------------------------------
+// LEADS SECTION: CONTACT FORM SUBMISSIONS
+// -------------------------------------------------------------
+const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
+  New: "bg-amber-100 text-amber-800 border border-amber-300",
+  Contacted: "bg-blue-100 text-blue-800 border border-blue-300",
+  Resolved: "bg-emerald-100 text-emerald-800 border border-emerald-300",
+};
+
+function LeadsSection() {
+  const [leads, setLeads] = useState<ContactLead[]>([]);
+  const [filterStatus, setFilterStatus] = useState<"All" | LeadStatus>("All");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    setLeads(getStoredLeads());
+  }, []);
+
+  const filtered = leads.filter((l) => {
+    const matchStatus = filterStatus === "All" || l.status === filterStatus;
+    const q = search.toLowerCase();
+    const matchSearch =
+      !q ||
+      l.name.toLowerCase().includes(q) ||
+      l.email.toLowerCase().includes(q) ||
+      l.phone.includes(q) ||
+      l.topic.toLowerCase().includes(q) ||
+      l.message.toLowerCase().includes(q);
+    return matchStatus && matchSearch;
+  });
+
+  function handleStatus(id: string, status: LeadStatus) {
+    const updated = updateLeadStatus(id, status);
+    setLeads(updated);
+  }
+
+  function handleDelete(id: string) {
+    if (confirm("Delete this lead permanently?")) {
+      const updated = deleteLead(id);
+      setLeads(updated);
+    }
+  }
+
+  const newCount = leads.filter((l) => l.status === "New").length;
+
+  return (
+    <div className="p-6 md:p-8 space-y-6 max-w-5xl">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="font-display text-2xl font-bold text-slate-900">Contact Form Leads</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            {leads.length} total enquiry{leads.length !== 1 ? "s" : ""} — {newCount} unread
+          </p>
+        </div>
+        {newCount > 0 && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-bold text-amber-800">
+            <Inbox className="size-3.5" />
+            {newCount} New Lead{newCount > 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by name, email, topic…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-amber-400 shadow-sm"
+          />
+        </div>
+        <div className="flex items-center gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-slate-100 p-1">
+          {(["All", "New", "Contacted", "Resolved"] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setFilterStatus(s)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap",
+                filterStatus === s
+                  ? "bg-white text-slate-900 shadow-sm font-bold"
+                  : "text-slate-600 hover:text-slate-900",
+              )}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center">
+          <Inbox className="size-10 text-slate-300 mx-auto mb-3" />
+          <p className="text-sm font-semibold text-slate-500">
+            {leads.length === 0
+              ? "No leads yet — submissions from the Contact page will appear here."
+              : "No leads match your filter."}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((lead) => (
+            <div
+              key={lead.id}
+              className={cn(
+                "rounded-xl border bg-white p-5 shadow-sm space-y-3 transition-all",
+                lead.status === "New" ? "border-amber-200" : "border-slate-200",
+              )}
+            >
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-display text-base font-bold text-slate-900">{lead.name}</span>
+                    <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider", LEAD_STATUS_COLORS[lead.status])}>
+                      {lead.status}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      {new Date(lead.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+                    <a href={`mailto:${lead.email}`} className="inline-flex items-center gap-1 hover:text-amber-700 font-medium">
+                      <Mail className="size-3 shrink-0" /> {lead.email}
+                    </a>
+                    <a href={`tel:${lead.phone}`} className="inline-flex items-center gap-1 hover:text-amber-700 font-medium">
+                      <PhoneCall className="size-3 shrink-0" /> {lead.phone}
+                    </a>
+                    <span className="inline-flex items-center gap-1 text-slate-500">
+                      <Tag className="size-3 shrink-0" /> {lead.topic}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <select
+                    value={lead.status}
+                    onChange={(e) => handleStatus(lead.id, e.target.value as LeadStatus)}
+                    className="text-xs rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 font-semibold text-slate-700 focus:outline-none focus:border-amber-400"
+                  >
+                    <option value="New">New</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Resolved">Resolved</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(lead.id)}
+                    className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
+                    title="Delete Lead"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 pt-3">
+                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{lead.message}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                <a
+                  href={`mailto:${lead.email}?subject=Re: ${encodeURIComponent(lead.topic)} — Spin & Dry&body=Hello ${encodeURIComponent(lead.name)},%0D%0A%0D%0AThank you for reaching out to Spin & Dry!`}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold px-3.5 py-1.5 hover:bg-slate-700 transition-colors"
+                >
+                  <Mail className="size-3.5" /> Reply via Email
+                </a>
+                <a
+                  href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello ${lead.name}! 👋 Thank you for contacting Spin & Dry regarding "${lead.topic}". We'd love to help you — could you share more details?`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold px-3.5 py-1.5 hover:bg-emerald-500 transition-colors"
+                >
+                  <MessageSquare className="size-3.5" /> WhatsApp
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const serviceFallbackCoverImages: Record<string, string> = {
+  "curtain-cleaning": "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80",
+  "carpet-cleaning": "https://images.unsplash.com/photo-1576016770956-debb63d90029?auto=format&fit=crop&w=600&q=80",
+  "blanket-cleaning": "https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?auto=format&fit=crop&w=600&q=80",
+  "sofa-cover-cleaning": "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=600&q=80",
+  "bedsheet-cleaning": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80",
+  "comforter-cleaning": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80",
+  "duvet-cleaning": "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=600&q=80",
+  "pillow-cleaning": "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=600&q=80",
+  "cushion-cover-cleaning": "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=600&q=80",
+  "quilt-cleaning": "https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?auto=format&fit=crop&w=600&q=80",
+  "table-linen-cleaning": "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80",
+  "home-linen-cleaning": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80",
+  "commercial-linen-cleaning": "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80",
+  "hotel-linen-cleaning": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
+  "office-fabric-care": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80",
+  "general-laundry": "https://images.unsplash.com/photo-1545173168-9f19472c043a?auto=format&fit=crop&w=600&q=80",
+};
+
+const categoryFallbackCovers: Record<string, string> = {
+  "Home Fabrics": "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80",
+  "Bedding & Linen": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80",
+  "Upholstery": "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=600&q=80",
+  "Commercial": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
+};
 
 // -------------------------------------------------------------
 // CMS SECTION: SERVICES MANAGEMENT
@@ -1060,46 +1298,84 @@ function ServicesCMSSection({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((s) => (
           <div key={s.slug} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
-            {editingSlug === s.slug ? (
-              <ServiceInlineEditor
-                service={s}
-                onSave={handleSaveService}
-                onCancel={() => setEditingSlug(null)}
-              />
-            ) : (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 uppercase">
-                    {s.category}
-                  </span>
-                  <span className="text-xs font-semibold text-slate-500">{s.turnaround}</span>
-                </div>
-                <h3 className="font-display text-xl font-bold text-slate-900">{s.name}</h3>
-                <p className="mt-2 text-xs text-slate-600 line-clamp-3">{s.summary}</p>
+            <div>
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg bg-slate-100 mb-3 border border-slate-200">
+                <img
+                  src={s.image || serviceFallbackCoverImages[s.slug] || categoryFallbackCovers[s.category] || "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80"}
+                  alt={s.name}
+                  className="h-full w-full object-cover"
+                />
               </div>
-            )}
+              <div className="flex items-center justify-between mb-2">
+                <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 uppercase">
+                  {s.category}
+                </span>
+                <span className="text-xs font-semibold text-slate-500">{s.turnaround}</span>
+              </div>
+              <h3 className="font-display text-xl font-bold text-slate-900">{s.name}</h3>
+              <p className="mt-2 text-xs text-slate-600 line-clamp-3">{s.summary}</p>
+            </div>
 
-            {!editingSlug && (
-              <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setEditingSlug(s.slug)}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline"
-                >
-                  <Edit3 className="size-3.5" /> Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteService(s.slug)}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-rose-500 hover:underline"
-                >
-                  <Trash2 className="size-3.5" /> Delete
-                </button>
-              </div>
-            )}
+            <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <button
+                type="button"
+                onClick={() => setEditingSlug(s.slug)}
+                className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline"
+              >
+                <Edit3 className="size-3.5" /> Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteService(s.slug)}
+                className="inline-flex items-center gap-1 text-xs font-bold text-rose-500 hover:underline"
+              >
+                <Trash2 className="size-3.5" /> Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Modal Dialog for Editing Service (Wide Two-Column Layout) */}
+      {editingSlug && (() => {
+        const editingService = list.find((s) => s.slug === editingSlug);
+        if (!editingService) return null;
+        return (
+          <div
+            onClick={() => setEditingSlug(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-xs"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            >
+              <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <div>
+                  <h3 className="font-display text-xl font-bold text-slate-900">
+                    Edit Service: {editingService.name}
+                  </h3>
+                  <p className="text-xs text-slate-500">Modify general metadata and starting prices.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditingSlug(null)}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+                <ServiceInlineEditor
+                  service={editingService}
+                  onSave={handleSaveService}
+                  onCancel={() => setEditingSlug(null)}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -1114,47 +1390,184 @@ function ServiceInlineEditor({
   onCancel: () => void;
 }) {
   const [draft, setDraft] = useState<Service>({ ...service });
+  const [pricesList, setPricesList] = useState<{ name: string; prices: Record<string, string> }[]>(
+    draft.prices && draft.prices.length > 0 ? draft.prices : (servicePricingData[draft.slug] || [])
+  );
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        setDraft({ ...draft, image: reader.result });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
-    <div className="space-y-3">
-      <div>
-        <label className="block text-[10px] font-bold uppercase text-slate-500">Service Name</label>
-        <input
-          type="text"
-          value={draft.name}
-          onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-          className="w-full rounded border border-slate-300 p-1.5 text-xs font-bold"
-        />
-      </div>
-      <div>
-        <label className="block text-[10px] font-bold uppercase text-slate-500">Turnaround Time</label>
-        <input
-          type="text"
-          value={draft.turnaround}
-          onChange={(e) => setDraft({ ...draft, turnaround: e.target.value })}
-          className="w-full rounded border border-slate-300 p-1.5 text-xs"
-        />
-      </div>
-      <div>
-        <label className="block text-[10px] font-bold uppercase text-slate-500">Summary</label>
-        <textarea
-          rows={3}
-          value={draft.summary}
-          onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
-          className="w-full rounded border border-slate-300 p-1.5 text-xs"
-        />
+    <div className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Left Column: Metadata */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Service Name</label>
+            <input
+              type="text"
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              className="w-full rounded border border-slate-300 p-2 text-xs font-bold text-slate-900 bg-white focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Turnaround Time</label>
+            <input
+              type="text"
+              value={draft.turnaround}
+              onChange={(e) => setDraft({ ...draft, turnaround: e.target.value })}
+              className="w-full rounded border border-slate-300 p-2 text-xs text-slate-900 bg-white focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Cover Image Path / File</label>
+            <input
+              type="text"
+              value={draft.image || ""}
+              onChange={(e) => setDraft({ ...draft, image: e.target.value })}
+              placeholder="e.g. /assets/curtain_before.jpg or base64 data"
+              className="w-full rounded border border-slate-300 p-2 text-xs font-mono text-slate-900 bg-white focus:border-amber-500 focus:outline-none"
+            />
+            <div className="mt-1.5 flex items-center gap-2">
+              <label className="cursor-pointer inline-flex items-center gap-1 bg-slate-200 hover:bg-slate-300 text-slate-800 text-[10px] font-bold py-1.5 px-3 border border-slate-300 rounded shadow-xs transition-colors">
+                <ImageIcon className="size-3.5" /> Select Local File
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </label>
+              {draft.image && draft.image.startsWith("data:") && (
+                <span className="text-[9px] text-emerald-600 font-bold">✓ Custom file loaded</span>
+              )}
+            </div>
+            {(draft.image || serviceFallbackCoverImages[draft.slug] || categoryFallbackCovers[draft.category]) && (
+              <div className="mt-3 relative aspect-[16/9] w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50 shadow-sm">
+                <img
+                  src={draft.image || serviceFallbackCoverImages[draft.slug] || categoryFallbackCovers[draft.category] || "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80"}
+                  alt="Cover preview"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            )}
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Summary</label>
+            <textarea
+              rows={4}
+              value={draft.summary}
+              onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
+              className="w-full rounded border border-slate-300 p-2 text-xs text-slate-900 bg-white focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Right Column: Pricing Catalog */}
+        <div className="flex flex-col h-full">
+          <label className="block text-[10px] font-bold uppercase text-slate-500 mb-2">Pricing Catalogue (₹ Starting Rates)</label>
+          <div className="flex-1 space-y-3 border border-slate-200 rounded-lg p-3 bg-slate-100/50 max-h-[500px] overflow-y-auto shadow-inner">
+            {pricesList.map((item, idx) => (
+              <div key={idx} className="border border-slate-200 rounded-lg p-3 bg-white shadow-sm hover:border-slate-300 transition-colors relative">
+                <div className="flex items-center justify-between gap-3 mb-2.5">
+                  <input
+                    type="text"
+                    placeholder="Item Name (e.g. Shirt / Pant)"
+                    value={item.name}
+                    onChange={(e) => {
+                      const updated = [...pricesList];
+                      if (updated[idx]) {
+                        updated[idx].name = e.target.value;
+                        setPricesList(updated);
+                        setDraft({ ...draft, prices: updated });
+                      }
+                    }}
+                    className="w-full rounded border border-slate-300 p-1.5 text-xs font-bold text-slate-900 bg-white focus:border-amber-500 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = pricesList.filter((_, i) => i !== idx);
+                      setPricesList(updated);
+                      setDraft({ ...draft, prices: updated });
+                    }}
+                    className="text-rose-500 hover:text-rose-700 text-xs font-bold shrink-0 transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2 rounded-md border border-slate-100">
+                  {[
+                    "Premium Laundry",
+                    "Dry Clean",
+                    "Premium Steam Press",
+                    "Luxe Service",
+                    "Regular Wash & Iron",
+                    "Regular Wash & Fold",
+                    "Roll press",
+                    "Polish - Extra",
+                    "Starch - Extra"
+                  ].map((k) => (
+                    <div key={k} className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] text-slate-500 truncate w-24 pr-1">{k}:</span>
+                      <input
+                        type="text"
+                        placeholder="—"
+                        value={item.prices[k] || ""}
+                        onChange={(e) => {
+                          const updated = [...pricesList];
+                          if (updated[idx]) {
+                            updated[idx].prices = { ...updated[idx].prices, [k]: e.target.value };
+                            setPricesList(updated);
+                            setDraft({ ...draft, prices: updated });
+                          }
+                        }}
+                        className="w-16 rounded border border-slate-200 bg-white py-0.5 px-1.5 text-[10px] text-center font-mono text-slate-800 focus:border-amber-500 focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                const updated = [...pricesList, { name: "", prices: {} }];
+                setPricesList(updated);
+                setDraft({ ...draft, prices: updated });
+              }}
+              className="w-full border border-dashed border-slate-300 rounded-lg py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200/80 hover:text-slate-800 bg-white shadow-xs transition-all"
+            >
+              + Add Price Row
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center justify-end gap-2 pt-2">
-        <button type="button" onClick={onCancel} className="text-xs text-slate-500 hover:underline">
+      <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-xs transition-colors"
+        >
           Cancel
         </button>
         <button
           type="button"
           onClick={() => onSave(draft)}
-          className="rounded bg-amber-500 px-3 py-1 text-xs font-bold text-slate-950"
+          className="rounded-lg bg-amber-500 px-5 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 shadow-md transition-colors"
         >
-          Save
+          Save Changes
         </button>
       </div>
     </div>
@@ -1172,25 +1585,79 @@ function BeforeAfterGalleryCMSSection({
   onUpdate: (items: BeforeAfterItem[]) => void;
 }) {
   const [list, setList] = useState<BeforeAfterItem[]>([...(gallery || [])]);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [serviceName, setServiceName] = useState("");
   const [beforeImage, setBeforeImage] = useState("");
   const [afterImage, setAfterImage] = useState("");
   const [description, setDescription] = useState("");
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "before" | "after") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        if (type === "before") setBeforeImage(reader.result);
+        else setAfterImage(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   function handleAdd() {
     if (!title || !beforeImage || !afterImage) return;
-    const newItem: BeforeAfterItem = {
-      id: `ba-${Date.now()}`,
-      title,
-      serviceName: serviceName || "Fabric Restoration",
-      beforeImage,
-      afterImage,
-      description,
-    };
-    const next = [newItem, ...list];
-    setList(next);
-    onUpdate(next);
+    if (editingId) {
+      const next = list.map((i) => {
+        if (i.id === editingId) {
+          return {
+            ...i,
+            title,
+            serviceName: serviceName || "Fabric Restoration",
+            beforeImage,
+            afterImage,
+            description,
+          };
+        }
+        return i;
+      });
+      setList(next);
+      onUpdate(next);
+      setEditingId(null);
+    } else {
+      const newItem: BeforeAfterItem = {
+        id: `ba-${Date.now()}`,
+        title,
+        serviceName: serviceName || "Fabric Restoration",
+        beforeImage,
+        afterImage,
+        description,
+      };
+      const next = [newItem, ...list];
+      setList(next);
+      onUpdate(next);
+    }
+    setTitle("");
+    setServiceName("");
+    setBeforeImage("");
+    setAfterImage("");
+    setDescription("");
+  }
+
+  function handleStartEdit(item: BeforeAfterItem) {
+    setEditingId(item.id);
+    setTitle(item.title);
+    setServiceName(item.serviceName);
+    setBeforeImage(item.beforeImage);
+    setAfterImage(item.afterImage);
+    setDescription(item.description);
+    // Smooth scroll to top of panel view
+    const mainEl = document.querySelector("main") || window;
+    mainEl.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null);
     setTitle("");
     setServiceName("");
     setBeforeImage("");
@@ -1203,6 +1670,9 @@ function BeforeAfterGalleryCMSSection({
       const next = list.filter((i) => i.id !== id);
       setList(next);
       onUpdate(next);
+      if (editingId === id) {
+        handleCancelEdit();
+      }
     }
   }
 
@@ -1215,9 +1685,11 @@ function BeforeAfterGalleryCMSSection({
         </div>
       </div>
 
-      {/* Add New Case Study Card */}
+      {/* Add / Edit Case Study Card */}
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-        <h3 className="text-xs font-bold uppercase text-amber-600 tracking-wider">Add New Case Study</h3>
+        <h3 className="text-xs font-bold uppercase text-amber-600 tracking-wider">
+          {editingId ? "Edit Case Study" : "Add New Case Study"}
+        </h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase">Case Title *</label>
@@ -1251,6 +1723,20 @@ function BeforeAfterGalleryCMSSection({
               onChange={(e) => setBeforeImage(e.target.value)}
               className="mt-1 w-full rounded border border-slate-300 p-2 text-sm font-mono"
             />
+            <div className="mt-2 flex items-center gap-2">
+              <label className="cursor-pointer inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-1.5 px-3 border border-slate-300 rounded shadow-sm">
+                <ImageIcon className="size-3.5" /> Select Local File
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, "before")}
+                  className="hidden"
+                />
+              </label>
+              {beforeImage && beforeImage.startsWith("data:") && (
+                <span className="text-[10px] text-emerald-600 font-bold">✓ File loaded</span>
+              )}
+            </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase">After Image Path / URL *</label>
@@ -1261,6 +1747,20 @@ function BeforeAfterGalleryCMSSection({
               onChange={(e) => setAfterImage(e.target.value)}
               className="mt-1 w-full rounded border border-slate-300 p-2 text-sm font-mono"
             />
+            <div className="mt-2 flex items-center gap-2">
+              <label className="cursor-pointer inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-1.5 px-3 border border-slate-300 rounded shadow-sm">
+                <ImageIcon className="size-3.5" /> Select Local File
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, "after")}
+                  className="hidden"
+                />
+              </label>
+              {afterImage && afterImage.startsWith("data:") && (
+                <span className="text-[10px] text-emerald-600 font-bold">✓ File loaded</span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1275,13 +1775,24 @@ function BeforeAfterGalleryCMSSection({
           />
         </div>
 
-        <button
-          type="button"
-          onClick={handleAdd}
-          className="bg-amber-500 text-slate-950 px-6 py-2.5 text-xs font-bold rounded-lg shadow hover:bg-amber-400"
-        >
-          Add Case Study to Gallery
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="bg-amber-500 text-slate-950 px-6 py-2.5 text-xs font-bold rounded-lg shadow hover:bg-amber-400 transition-colors"
+          >
+            {editingId ? "Save Case Study Changes" : "Add Case Study to Gallery"}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-6 py-2.5 text-xs font-bold rounded-lg transition-colors"
+            >
+              Cancel Edit
+            </button>
+          )}
+        </div>
       </div>
 
       {/* List of Case Studies */}
@@ -1293,22 +1804,52 @@ function BeforeAfterGalleryCMSSection({
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">{item.serviceName}</span>
                 <h4 className="font-display text-lg font-bold text-slate-900">{item.title}</h4>
               </div>
-              <button
-                type="button"
-                onClick={() => handleDelete(item.id)}
-                className="text-slate-400 hover:text-rose-600 p-1"
-                title="Delete Case Study"
-              >
-                <Trash2 className="size-4" />
-              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleStartEdit(item)}
+                  className="text-slate-400 hover:text-amber-600 p-1 transition-colors"
+                  title="Edit Case Study"
+                >
+                  <Edit3 className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(item.id)}
+                  className="text-slate-400 hover:text-rose-600 p-1 transition-colors"
+                  title="Delete Case Study"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
             </div>
             <p className="text-xs text-slate-600">{item.description}</p>
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-              <div className="text-[10px] font-mono text-slate-500 truncate">
-                <span className="font-bold text-slate-700 block">Before Image:</span> {item.beforeImage}
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-slate-700 block">Before Image:</span>
+                <div className="relative aspect-[16/10] w-full overflow-hidden rounded bg-slate-100 border border-slate-200">
+                  <img
+                    src={item.beforeImage}
+                    alt="Before state"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="text-[9px] font-mono text-slate-400 truncate" title={item.beforeImage}>
+                  {item.beforeImage}
+                </div>
               </div>
-              <div className="text-[10px] font-mono text-slate-500 truncate">
-                <span className="font-bold text-slate-700 block">After Image:</span> {item.afterImage}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-slate-700 block">After Image:</span>
+                <div className="relative aspect-[16/10] w-full overflow-hidden rounded bg-slate-100 border border-slate-200">
+                  <img
+                    src={item.afterImage}
+                    alt="After state"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="text-[9px] font-mono text-slate-400 truncate" title={item.afterImage}>
+                  {item.afterImage}
+                </div>
               </div>
             </div>
           </div>
@@ -1488,9 +2029,24 @@ function StudioSettingsCMSSection({
   onUpdate: (settings: StudioSettings) => void;
 }) {
   const [draft, setDraft] = useState<StudioSettings>({ ...settings });
+  const [saved, setSaved] = useState(false);
+
+  // Sync draft if parent settings change (e.g. after CMS reset)
+  useEffect(() => {
+    setDraft({ ...settings });
+  }, [settings]);
 
   function handleSave() {
-    onUpdate(draft);
+    // Auto-derive phoneHref and whatsapp from the phone number
+    const digits = draft.phone.replace(/[^0-9]/g, "");
+    const updated: StudioSettings = {
+      ...draft,
+      phoneHref: digits ? `tel:+${digits}` : draft.phoneHref,
+      whatsapp: digits ? `https://wa.me/${digits}` : draft.whatsapp,
+    };
+    onUpdate(updated);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
   }
 
   return (
@@ -1553,15 +2109,449 @@ function StudioSettingsCMSSection({
           </div>
         </div>
 
-        <div className="pt-3 border-t border-slate-100 flex justify-end">
+        <div className="space-y-3 pt-2">
+          <label className="block text-xs font-bold uppercase text-slate-700">Operating Studio Hours</label>
+          {(draft.hours || []).map((h, idx) => (
+            <div key={idx} className="grid gap-3 sm:grid-cols-2">
+              <input
+                type="text"
+                value={h.days}
+                onChange={(e) => {
+                  const updated = [...(draft.hours || [])];
+                  updated[idx] = { ...updated[idx]!, days: e.target.value };
+                  setDraft({ ...draft, hours: updated });
+                }}
+                className="rounded border border-slate-300 p-2 text-sm font-semibold"
+              />
+              <input
+                type="text"
+                value={h.time}
+                onChange={(e) => {
+                  const updated = [...(draft.hours || [])];
+                  updated[idx] = { ...updated[idx]!, time: e.target.value };
+                  setDraft({ ...draft, hours: updated });
+                }}
+                className="rounded border border-slate-300 p-2 text-sm"
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-4">
+          {saved && (
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5">
+              <Check className="size-3.5" /> Settings saved — site updated!
+            </span>
+          )}
           <button
             type="button"
             onClick={handleSave}
-            className="bg-amber-500 text-slate-950 px-7 py-3 text-xs font-bold rounded-lg shadow hover:bg-amber-400"
+            className="ml-auto bg-amber-500 text-slate-950 px-7 py-3 text-xs font-bold rounded-lg shadow hover:bg-amber-400 transition-colors"
           >
             Save Studio Settings
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// CMS SECTION: CASE STUDIES MANAGEMENT
+// -------------------------------------------------------------
+function CaseStudiesCMSSection({
+  caseStudies,
+  onUpdate,
+}: {
+  caseStudies: CaseStudy[];
+  onUpdate: (updated: CaseStudy[]) => void;
+}) {
+  const [list, setList] = useState<CaseStudy[]>(caseStudies);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Form states
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [challenge, setChallenge] = useState("");
+  const [solution, setSolution] = useState("");
+  const [result, setResult] = useState("");
+  const [image, setImage] = useState("");
+  const [tags, setTags] = useState("");
+  
+  // Stats states (3 stats limit)
+  const [stat1Label, setStat1Label] = useState("Stain Lift Rate");
+  const [stat1Value, setStat1Value] = useState("99.8%");
+  const [stat2Label, setStat2Label] = useState("Dye Retention");
+  const [stat2Value, setStat2Value] = useState("100%");
+  const [stat3Label, setStat3Label] = useState("Processing Time");
+  const [stat3Value, setStat3Value] = useState("72 Hours");
+
+  useEffect(() => {
+    setList(caseStudies);
+  }, [caseStudies]);
+
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        setImage(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleStartEdit(item: CaseStudy) {
+    setEditingId(item.id);
+    setTitle(item.title);
+    setCategory(item.category);
+    setChallenge(item.challenge);
+    setSolution(item.solution);
+    setResult(item.result);
+    setImage(item.image);
+    setTags(item.tags || "");
+
+    // Load stats safely
+    setStat1Label(item.stats?.[0]?.label || "");
+    setStat1Value(item.stats?.[0]?.value || "");
+    setStat2Label(item.stats?.[1]?.label || "");
+    setStat2Value(item.stats?.[1]?.value || "");
+    setStat3Label(item.stats?.[2]?.label || "");
+    setStat3Value(item.stats?.[2]?.value || "");
+
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null);
+    setTitle("");
+    setCategory("");
+    setChallenge("");
+    setSolution("");
+    setResult("");
+    setImage("");
+    setTags("");
+    setStat1Label("Stain Lift Rate");
+    setStat1Value("99.8%");
+    setStat2Label("Dye Retention");
+    setStat2Value("100%");
+    setStat3Label("Processing Time");
+    setStat3Value("72 Hours");
+  }
+
+  function handleAdd() {
+    if (!title || !category || !challenge || !solution || !result || !image) {
+      alert("Please fill in all required fields marked with * (including selecting or inputting an image).");
+      return;
+    }
+
+    const compiledStats = [
+      { label: stat1Label, value: stat1Value },
+      { label: stat2Label, value: stat2Value },
+      { label: stat3Label, value: stat3Value },
+    ].filter((s) => s.label && s.value);
+
+    if (editingId) {
+      // Edit
+      const next = list.map((item) => {
+        if (item.id === editingId) {
+          return {
+            ...item,
+            title,
+            category,
+            challenge,
+            solution,
+            result,
+            image,
+            tags,
+            stats: compiledStats,
+          };
+        }
+        return item;
+      });
+      setList(next);
+      onUpdate(next);
+      handleCancelEdit();
+    } else {
+      // Add
+      const newItem: CaseStudy = {
+        id: `cs-${Date.now()}`,
+        title,
+        category,
+        challenge,
+        solution,
+        result,
+        image,
+        tags,
+        stats: compiledStats,
+      };
+      const next = [...list, newItem];
+      setList(next);
+      onUpdate(next);
+      handleCancelEdit();
+    }
+  }
+
+  function handleDelete(id: string) {
+    if (confirm("Are you sure you want to delete this case study?")) {
+      const next = list.filter((item) => item.id !== id);
+      setList(next);
+      onUpdate(next);
+      if (editingId === id) {
+        handleCancelEdit();
+      }
+    }
+  }
+
+  return (
+    <div className="p-6 md:p-8 space-y-6 max-w-5xl">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-2xl font-bold text-slate-900">Restoration Case Studies Manager</h2>
+          <p className="text-xs text-slate-500 font-semibold">Manage detailed craftsmanship restoration stories displayed on the homepage.</p>
+        </div>
+      </div>
+
+      {/* Add / Edit Form Card */}
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <h3 className="text-xs font-bold uppercase text-amber-600 tracking-wider">
+          {editingId ? "Edit Case Study" : "Add New Case Study"}
+        </h3>
+        
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase">Case Title *</label>
+            <input
+              type="text"
+              placeholder="e.g. 10x14 ft Hand-Knotted Silk & Wool Persian Rug"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm font-semibold"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase">Category *</label>
+            <input
+              type="text"
+              placeholder="e.g. Rugs & Carpets"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm font-semibold"
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-bold text-slate-700 uppercase">Image Path / URL *</label>
+            <input
+              type="text"
+              placeholder="https://images.unsplash.com/... or base64"
+              value={image}
+              onChange={(e) => setImage(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm font-mono"
+            />
+            <div className="mt-2 flex items-center gap-2">
+              <label className="cursor-pointer inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-1.5 px-3 border border-slate-300 rounded shadow-sm">
+                <ImageIcon className="size-3.5" /> Select Local File
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </label>
+              {image && image.startsWith("data:") && (
+                <span className="text-[10px] text-emerald-600 font-bold">✓ File loaded</span>
+              )}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase">Tags (comma-separated)</label>
+            <input
+              type="text"
+              placeholder="e.g. Goose Down, Loft Revival"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm font-semibold"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase">Initial Condition / Challenge *</label>
+            <input
+              type="text"
+              placeholder="e.g. Deep aged red wine stain, dust compaction, matted silk fringe."
+              value={challenge}
+              onChange={(e) => setChallenge(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase">Solution / Spin & Dry Protocol *</label>
+            <input
+              type="text"
+              placeholder="e.g. Controlled pH solvent extraction, hand-brushed fringe revival & low-heat air drying."
+              value={solution}
+              onChange={(e) => setSolution(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase">Verified Result *</label>
+            <input
+              type="text"
+              placeholder="e.g. 100% stain removal, restored silk lustre, 0% dye bleed."
+              value={result}
+              onChange={(e) => setResult(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 p-2.5 text-sm font-semibold text-emerald-700"
+            />
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="pt-2">
+          <label className="block text-xs font-bold uppercase text-slate-700 mb-2">Metrics/KPIs (Max 3)</label>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="p-3 border border-slate-200 rounded-lg bg-slate-50 space-y-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Metric 1</span>
+              <input
+                type="text"
+                placeholder="Label (e.g. Stain Lift Rate)"
+                value={stat1Label}
+                onChange={(e) => setStat1Label(e.target.value)}
+                className="w-full rounded border border-slate-300 p-1.5 text-xs font-semibold"
+              />
+              <input
+                type="text"
+                placeholder="Value (e.g. 99.8%)"
+                value={stat1Value}
+                onChange={(e) => setStat1Value(e.target.value)}
+                className="w-full rounded border border-slate-300 p-1.5 text-xs font-bold"
+              />
+            </div>
+            <div className="p-3 border border-slate-200 rounded-lg bg-slate-50 space-y-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Metric 2</span>
+              <input
+                type="text"
+                placeholder="Label (e.g. Dye Retention)"
+                value={stat2Label}
+                onChange={(e) => setStat2Label(e.target.value)}
+                className="w-full rounded border border-slate-300 p-1.5 text-xs font-semibold"
+              />
+              <input
+                type="text"
+                placeholder="Value (e.g. 100%)"
+                value={stat2Value}
+                onChange={(e) => setStat2Value(e.target.value)}
+                className="w-full rounded border border-slate-300 p-1.5 text-xs font-bold"
+              />
+            </div>
+            <div className="p-3 border border-slate-200 rounded-lg bg-slate-50 space-y-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Metric 3</span>
+              <input
+                type="text"
+                placeholder="Label (e.g. Processing Time)"
+                value={stat3Label}
+                onChange={(e) => setStat3Label(e.target.value)}
+                className="w-full rounded border border-slate-300 p-1.5 text-xs font-semibold"
+              />
+              <input
+                type="text"
+                placeholder="Value (e.g. 72 Hours)"
+                value={stat3Value}
+                onChange={(e) => setStat3Value(e.target.value)}
+                className="w-full rounded border border-slate-300 p-1.5 text-xs font-bold"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2 pt-2 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="bg-amber-500 text-slate-950 px-6 py-2.5 text-xs font-bold rounded-lg shadow hover:bg-amber-400 transition-colors"
+          >
+            {editingId ? "Save Case Study Changes" : "Add Case Study to Showcase"}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-6 py-2.5 text-xs font-bold rounded-lg transition-colors"
+            >
+              Cancel Edit
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* List Grid */}
+      <div className="grid gap-6 sm:grid-cols-2">
+        {list.map((item) => (
+          <div key={item.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4 flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">{item.category}</span>
+                  <h4 className="font-display text-lg font-bold text-slate-900 leading-tight">{item.title}</h4>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleStartEdit(item)}
+                    className="text-slate-400 hover:text-amber-600 p-1 transition-colors"
+                    title="Edit Case Study"
+                  >
+                    <Edit3 className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(item.id)}
+                    className="text-slate-400 hover:text-rose-600 p-1 transition-colors"
+                    title="Delete Case Study"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="aspect-[16/9] rounded-lg overflow-hidden bg-slate-100 border border-slate-100 relative">
+                <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                {item.tags && (
+                  <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
+                    {item.tags.split(",").slice(0, 2).map((t) => (
+                      <span key={t} className="bg-slate-900/90 text-white rounded text-[8px] px-1.5 py-0.5 font-bold uppercase tracking-wider">
+                        {t.trim()}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5 text-xs text-slate-600">
+                <p><strong>Intake:</strong> {item.challenge}</p>
+                <p><strong>Result:</strong> {item.result}</p>
+              </div>
+            </div>
+
+            {item.stats && item.stats.length > 0 && (
+              <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-lg">
+                {item.stats.slice(0, 3).map((s, idx) => (
+                  <div key={idx} className="bg-white p-1 text-center rounded border border-slate-100">
+                    <span className="block text-[11px] font-bold text-amber-600 font-mono truncate">{s.value}</span>
+                    <span className="block text-[8px] text-slate-500 uppercase tracking-widest truncate">{s.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -2182,6 +3172,161 @@ function AnalyticsCMSSection({ orders }: { orders: AdminOrder[] }) {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// CMS SECTION: HERO SLIDESHOW IMAGES
+// -------------------------------------------------------------
+function HeroSlideshowCMSSection({
+  heroSlides,
+  onUpdate,
+}: {
+  heroSlides: string[];
+  onUpdate: (slides: string[]) => void;
+}) {
+  const [slides, setSlides] = useState<string[]>([...heroSlides]);
+  const [inputUrl, setInputUrl] = useState("");
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        const updated = [...slides, reader.result];
+        setSlides(updated);
+        onUpdate(updated);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddUrl = () => {
+    if (!inputUrl.trim()) return;
+    const updated = [...slides, inputUrl.trim()];
+    setSlides(updated);
+    onUpdate(updated);
+    setInputUrl("");
+  };
+
+  const handleDelete = (index: number) => {
+    const updated = slides.filter((_, idx) => idx !== index);
+    setSlides(updated);
+    onUpdate(updated);
+  };
+
+  const moveSlide = (index: number, direction: "up" | "down") => {
+    const targetIdx = direction === "up" ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= slides.length) return;
+    const updated = [...slides];
+    const temp = updated[index]!;
+    updated[index] = updated[targetIdx]!;
+    updated[targetIdx] = temp;
+    setSlides(updated);
+    onUpdate(updated);
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+        <h3 className="font-display text-lg font-bold text-slate-900">Manage Slideshow Images</h3>
+        <p className="text-xs text-slate-500 mt-1">
+          Upload fabric care photos or paste Unsplash image URLs to create a rotating hero background.
+        </p>
+
+        <div className="mt-6 flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <label className="block text-xs font-bold text-slate-700 uppercase">Paste Image URL</label>
+            <div className="mt-2 flex gap-2">
+              <input
+                type="url"
+                value={inputUrl}
+                onChange={(e) => setInputUrl(e.target.value)}
+                placeholder="https://images.unsplash.com/photo-..."
+                className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2 text-xs focus:border-amber-500 focus:outline-none bg-slate-50"
+              />
+              <button
+                type="button"
+                onClick={handleAddUrl}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors shrink-0"
+              >
+                Add URL
+              </button>
+            </div>
+          </div>
+
+          <div className="shrink-0">
+            <label className="block text-xs font-bold text-slate-700 uppercase">Upload Local Photo</label>
+            <div className="mt-2 relative">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+              <div className="border border-dashed border-slate-300 rounded-lg px-4 py-2 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 flex items-center gap-2 cursor-pointer transition-colors">
+                <ImageIcon className="size-4 text-slate-400" />
+                <span>Upload Image file</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {slides.map((slide, idx) => (
+          <div key={slide + idx} className="group relative border border-slate-200 bg-white rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col">
+            <div className="relative aspect-video w-full overflow-hidden bg-slate-100 border-b border-slate-200">
+              <img src={slide} alt={`Slide ${idx + 1}`} className="h-full w-full object-cover" />
+              <div className="absolute top-2 left-2 rounded bg-slate-950/70 px-2 py-0.5 font-mono text-[10px] font-bold text-white">
+                Slide {idx + 1}
+              </div>
+            </div>
+
+            <div className="p-3 flex items-center justify-between gap-2 bg-slate-50/50 mt-auto">
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  disabled={idx === 0}
+                  onClick={() => moveSlide(idx, "up")}
+                  className="rounded p-1 text-slate-500 hover:bg-slate-200 disabled:opacity-30 transition-colors"
+                  title="Move Slide Up"
+                >
+                  <ArrowUp className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  disabled={idx === slides.length - 1}
+                  onClick={() => moveSlide(idx, "down")}
+                  className="rounded p-1 text-slate-500 hover:bg-slate-200 disabled:opacity-30 transition-colors"
+                  title="Move Slide Down"
+                >
+                  <ArrowDown className="size-4" />
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleDelete(idx)}
+                className="rounded p-1 text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+                title="Delete Slide"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+
+        {slides.length === 0 && (
+          <div className="col-span-full border border-dashed border-slate-300 rounded-xl p-12 text-center bg-white shadow-xs">
+            <ImageIcon className="size-10 text-slate-300 mx-auto" />
+            <h4 className="mt-3 text-sm font-bold text-slate-900">No slideshow images defined</h4>
+            <p className="mt-1 text-xs text-slate-500">Add slides using the controls above to start showing a sliding hero.</p>
+          </div>
+        )}
       </div>
     </div>
   );

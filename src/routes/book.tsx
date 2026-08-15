@@ -1,7 +1,7 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { z } from "zod";
 import { BookingFlow } from "@/components/booking/BookingFlow";
-import { site } from "@/data/site";
+import { useSiteSettings } from "@/lib/use-site-settings";
 
 const searchSchema = z.object({ service: z.string().optional() });
 
@@ -30,6 +30,7 @@ export const Route = createFileRoute("/book")({
 });
 
 function BookPage() {
+  const site = useSiteSettings();
   const { service } = useSearch({ from: "/book" });
 
   return (

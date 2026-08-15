@@ -128,7 +128,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             geoMidpoint: { "@type": "GeoCoordinates", latitude: 12.880174, longitude: 77.5517447 },
             geoRadius: "10000",
           },
-          openingHours: ["Mo-Sa 08:00-20:00", "Su 09:00-14:00"],
+          openingHours: ["Mo-Sa 08:00-20:00", "Su 08:00-13:00"],
           priceRange: "$$",
         }),
       },

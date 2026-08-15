@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Menu, X, Phone, CalendarCheck, MessageSquare, MapPin } from "lucide-react";
 import { services } from "@/data/services";
-import { site } from "@/data/site";
+import { useSiteSettings } from "@/lib/use-site-settings";
 import { Wordmark } from "./Wordmark";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ const nav = [
 ] as const;
 
 export function SiteHeader() {
+  const site = useSiteSettings();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 

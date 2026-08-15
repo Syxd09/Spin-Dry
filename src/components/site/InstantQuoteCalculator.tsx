@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { Calculator, Check, Sparkles, ArrowRight, ShieldCheck, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getStoredCMS } from "@/lib/admin-store";
+import { services, servicePricingData } from "@/data/services";
 
 type PricingCategory = {
   id: string;
@@ -79,12 +81,61 @@ const categories: PricingCategory[] = [
   },
 ];
 
-const defaultCategory = categories[0] as PricingCategory;
-
 export function InstantQuoteCalculator() {
-  const [selectedCat, setSelectedCat] = useState<PricingCategory>(defaultCategory);
+  const cmsData = getStoredCMS();
+  const cmsServices = cmsData.services && cmsData.services.length > 0 ? cmsData.services : services;
+
+  const dynamicCategories = useMemo(() => {
+    return cmsServices.map((s) => {
+      let basePrice = 150;
+      const prices = s.prices && s.prices.length > 0 ? s.prices : (servicePricingData[s.slug] || []);
+      if (prices.length > 0) {
+        const firstItem = prices[0];
+        if (firstItem) {
+          const values = Object.values(firstPriceItem(firstItem));
+          if (values.length > 0) {
+            basePrice = values[0] || 150;
+          }
+        }
+      }
+
+      const nameLower = s.name.toLowerCase();
+      const isSqFt = nameLower.includes("carpet") || nameLower.includes("rug") || nameLower.includes("curtain");
+      
+      const unitName = isSqFt ? "sq. ft." : "item(s)";
+      const unitLabel = isSqFt 
+        ? "Area in Sq. Ft. (e.g., width x height)" 
+        : `${s.name} Count / Quantity`;
+      const minQty = isSqFt ? 20 : 1;
+      const maxQty = isSqFt ? 300 : 20;
+      const step = isSqFt ? 10 : 1;
+
+      return {
+        id: s.slug,
+        name: s.name,
+        unitLabel,
+        basePrice,
+        unitName,
+        minQty,
+        maxQty,
+        step,
+        slug: s.slug,
+        description: s.summary,
+      };
+    });
+
+    function firstPriceItem(item: any): Record<string, number> {
+      return item.prices || {};
+    }
+  }, [cmsServices]);
+
+  const [activeCatSlug, setActiveCatSlug] = useState<string>(dynamicCategories[0]?.slug || "curtains-and-drapes");
   const [qty, setQty] = useState<number>(4);
   const [isExpress, setIsExpress] = useState<boolean>(false);
+
+  const selectedCat = useMemo(() => {
+    return (dynamicCategories.find((c) => c.slug === activeCatSlug) || dynamicCategories[0] || categories[0]) as PricingCategory;
+  }, [dynamicCategories, activeCatSlug]);
 
   const subtotal = selectedCat.basePrice * qty;
   const expressFee = isExpress ? Math.round(subtotal * 0.25) : 0;
@@ -109,29 +160,31 @@ export function InstantQuoteCalculator() {
             Select your item type and volume for an instant estimate. Final quotes are confirmed at intake with zero obligations.
           </p>
 
-          {/* Category Tabs */}
+          {/* Category Tabs (Scrollable List) */}
           <div className="mt-8">
             <label className="eyebrow mb-3 block text-muted-foreground">1. Select Fabric Category</label>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {categories.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCat(c);
-                    setQty(c.minQty);
-                  }}
-                  className={cn(
-                    "flex flex-col items-start border p-3.5 text-left transition-all",
-                    selectedCat.id === c.id
-                      ? "border-brass bg-brass-soft/30 text-ink shadow-sm"
-                      : "border-border bg-background hover:border-border/80 hover:bg-card",
-                  )}
-                >
-                  <span className="font-semibold text-sm">{c.name}</span>
-                  <span className="mt-0.5 text-xs text-muted-foreground">From ₹{c.basePrice} / {c.unitName}</span>
-                </button>
-              ))}
+            <div className="max-h-[260px] overflow-y-auto pr-1.5 space-y-2 border border-slate-100 rounded-lg p-2 bg-slate-50/50">
+              <div className="grid gap-2 sm:grid-cols-2">
+                {dynamicCategories.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveCatSlug(c.slug);
+                      setQty(c.minQty);
+                    }}
+                    className={cn(
+                      "flex flex-col items-start border p-3.5 text-left transition-all rounded-lg",
+                      selectedCat.id === c.id
+                        ? "border-brass bg-brass-soft/30 text-ink shadow-sm ring-1 ring-brass"
+                        : "border-border bg-background hover:border-border/80 hover:bg-card",
+                    )}
+                  >
+                    <span className="font-semibold text-sm line-clamp-1">{c.name}</span>
+                    <span className="mt-0.5 text-xs text-muted-foreground font-mono">From ₹{c.basePrice} / {c.unitName}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

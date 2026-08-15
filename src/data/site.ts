@@ -9,8 +9,8 @@ export const site = {
   email: "care@spinanddry.com",
   address: "Spin & Dry Fabric Care Studio, 14th Cross Rd, Narayana Nagar 1st Block, Konanakunte, Bengaluru, Karnataka 560062",
   hours: [
-    { days: "Monday – Saturday", time: "8:00 – 20:00" },
-    { days: "Sunday", time: "9:00 – 14:00 (pickup only)" },
+    { days: "Monday – Saturday", time: "8:00 AM – 8:00 PM" },
+    { days: "Sunday", time: "8:00 AM – 1:00 PM" },
   ],
   /** Studio coordinates used for the 10 km pickup radius calculation (SPIN & DRY Google Maps Pin: 12.880174, 77.5517447). */
   coords: { lat: 12.880174, lng: 77.5517447 },

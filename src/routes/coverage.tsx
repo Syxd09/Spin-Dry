@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { MapPin, Loader2, CheckCircle2, Search, ArrowRight, Clock } from "lucide-react";
-import { site } from "@/data/site";
+import { site as staticSite } from "@/data/site";
+import { useSiteSettings } from "@/lib/use-site-settings";
 import { haversineKm, mapsBrowserKey } from "@/lib/geo";
 import { cn } from "@/lib/utils";
 
@@ -39,9 +40,11 @@ const coverageZones = [
   { area: "Basavanagudi", pincode: "560004", status: "Free Doorstep Route", window: "Daily 8:00 - 20:00" },
 ];
 
-const directions = `https://www.google.com/maps/dir/?api=1&destination=${site.coords.lat},${site.coords.lng}`;
+// static coords never change (studio location is fixed)
+const directions = `https://www.google.com/maps/dir/?api=1&destination=${staticSite.coords.lat},${staticSite.coords.lng}`;
 
 function CoveragePage() {
+  const site = useSiteSettings();
   const [distance, setDistance] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -57,7 +60,7 @@ function CoveragePage() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setDistance(
-          haversineKm(site.coords, { lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          haversineKm(staticSite.coords, { lat: pos.coords.latitude, lng: pos.coords.longitude }),
         );
         setBusy(false);
       },
@@ -146,35 +149,17 @@ function CoveragePage() {
 
           {/* Location Map View */}
           <div className="border border-border bg-card shadow-lift overflow-hidden rounded">
-            {mapsBrowserKey ? (
-              <iframe
-                title="Spin & Dry studio location"
-                loading="lazy"
-                className="h-[320px] w-full"
-                referrerPolicy="no-referrer-when-downgrade"
-                src={`https://www.google.com/maps/embed/v1/view?key=${mapsBrowserKey}&center=${site.coords.lat},${site.coords.lng}&zoom=12`}
-              />
-            ) : (
-              <div className="flex h-[280px] w-full items-center justify-center p-6 bg-ink text-background">
-                <div className="relative flex size-full items-center justify-center">
-                  <span className="absolute size-[80%] rounded-full border border-dashed border-brass/30" />
-                  <span className="absolute size-[55%] rounded-full border border-background/20" />
-                  <span className="absolute size-[30%] rounded-full border border-brass/30" />
-                  <span className="relative z-10 flex flex-col items-center text-center">
-                    <MapPin className="size-7 text-brass" />
-                    <span className="eyebrow mt-2 text-brass">Konanakunte Studio</span>
-                    <span className="mt-1 font-display text-3xl text-background">
-                      {site.pickupRadiusKm} km Radius
-                    </span>
-                    <span className="mt-1 text-xs text-background/70">Bengaluru Core Coverage</span>
-                  </span>
-                </div>
-              </div>
-            )}
+            <iframe
+              title="Spin & Dry studio location"
+              loading="lazy"
+              className="h-[320px] w-full border-0"
+              referrerPolicy="no-referrer-when-downgrade"
+              src="https://maps.google.com/maps?cid=2576506162805989971&hl=en&ie=UTF8&iwloc=&output=embed"
+            />
             <div className="border-t border-border p-5 bg-card">
               <p className="eyebrow text-brass">Studio Hub Address</p>
               <address className="mt-1 text-sm not-italic text-foreground font-medium">{site.address}</address>
-              <p className="mt-0.5 text-xs text-muted-foreground">Hours: Mon - Sat 8:00 - 20:00 · Sun 9:00 - 14:00</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Hours: Mon - Sat 8:00 AM - 8:00 PM · Sun 8:00 AM - 1:00 PM</p>
             </div>
           </div>
         </div>

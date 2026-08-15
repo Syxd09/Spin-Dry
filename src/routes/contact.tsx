@@ -3,6 +3,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { site } from "@/data/site";
+import { saveLead } from "@/lib/admin-store";
+import { useSiteSettings } from "@/lib/use-site-settings";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -42,6 +44,7 @@ const schema = z.object({
 type Errs = Partial<Record<"name" | "email" | "phone" | "message", string>>;
 
 function ContactPage() {
+  const site = useSiteSettings();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -64,6 +67,7 @@ function ContactPage() {
       return;
     }
     setErrors({});
+    saveLead(form);
     setSent(true);
     toast.success("Enquiry received — we reply within one working day.");
   }

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { journey, site } from "@/data/site";
+import { journey } from "@/data/site";
+import { useSiteSettings } from "@/lib/use-site-settings";
 import { Reveal } from "@/components/site/Reveal";
 import facility from "@/assets/facility.jpg";
 
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/process")({
 });
 
 function ProcessPage() {
+  const site = useSiteSettings();
   return (
     <div>
       <header className="border-b border-border px-5 py-8 md:px-10 md:py-14">

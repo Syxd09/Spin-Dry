@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { MapPin } from "lucide-react";
 import { services } from "@/data/services";
-import { site } from "@/data/site";
+import { useSiteSettings } from "@/lib/use-site-settings";
 
 export function SiteFooter() {
+  const site = useSiteSettings();
   return (
     <footer className="bg-ink text-background/80">
       <div className="mx-auto max-w-[88rem] px-5 py-16 md:px-10 md:py-24">

@@ -101,30 +101,30 @@ export function BeforeAfterSlider({ items }: { items?: BeforeAfterItem[] }) {
               if (isDragging.current && e.touches[0]) handleMove(e.touches[0].clientX);
             }}
           >
-            {/* Before Image (Background) */}
+            {/* After Image (Background - Clean on Right) */}
             <img 
-              src={activeItem.beforeImage} 
-              alt="Before Restoration" 
+              src={activeItem.afterImage} 
+              alt="After Restoration" 
               className="absolute inset-0 h-full w-full object-cover pointer-events-none"
             />
-            <div className="absolute top-4 left-4 z-10 rounded bg-ink/75 px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-white uppercase backdrop-blur-xs">
-              Before Care (Dirty)
+            <div className="absolute top-4 right-4 z-10 rounded bg-brass/90 px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-ink uppercase backdrop-blur-xs">
+              After Clean (Pristine)
             </div>
 
-            {/* After Image (Overlay, width controlled by sliderPosition) */}
+            {/* Before Image (Overlay - Dirty on Left, width controlled by sliderPosition) */}
             <div 
               className="absolute inset-y-0 left-0 right-0 overflow-hidden pointer-events-none"
               style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
             >
               <img 
-                src={activeItem.afterImage} 
-                alt="After Restoration" 
+                src={activeItem.beforeImage} 
+                alt="Before Restoration" 
                 className="absolute inset-0 h-full w-full object-cover pointer-events-none"
                 style={{ width: containerRef.current?.getBoundingClientRect().width || "100%" }}
               />
             </div>
-            <div className="absolute top-4 right-4 z-10 rounded bg-brass/90 px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-ink uppercase backdrop-blur-xs">
-              After Clean (Pristine)
+            <div className="absolute top-4 left-4 z-10 rounded bg-ink/75 px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-white uppercase backdrop-blur-xs">
+              Before Care (Dirty)
             </div>
 
             {/* Slider Line Divider & Drag Handle */}
@@ -157,7 +157,7 @@ export function BeforeAfterSlider({ items }: { items?: BeforeAfterItem[] }) {
               <span className="eyebrow text-muted-foreground text-[10px] uppercase tracking-wider block">
                 Select Case Study
               </span>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 max-h-[290px] overflow-y-auto pr-1.5 scrollbar-thin">
                 {displayItems.map((item) => {
                   const isActive = item.id === activeItem.id;
                   return (

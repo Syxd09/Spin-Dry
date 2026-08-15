@@ -20,6 +20,7 @@ import {
   Megaphone,
 } from "lucide-react";
 import { site } from "@/data/site";
+import { useSiteSettings } from "@/lib/use-site-settings";
 import { AdminOrder, OrderStatus, getStoredOrders } from "@/lib/admin-store";
 import { cn } from "@/lib/utils";
 
@@ -84,6 +85,7 @@ function getStepIndex(status: OrderStatus): number {
 }
 
 function TrackPage() {
+  const site = useSiteSettings();
   const search = useSearch({ from: "/track" });
   const [refInput, setRefInput] = useState(search.ref || "");
   const [phoneInput, setPhoneInput] = useState(search.phone || "");

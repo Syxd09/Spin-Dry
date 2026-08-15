@@ -27,6 +27,25 @@ export const Route = createFileRoute("/services/")({
   component: ServicesIndex,
 });
 
+const serviceCoverImages: Record<string, string> = {
+  "curtains-and-drapes": "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80",
+  "carpets-and-area-rugs": "https://images.unsplash.com/photo-1576016770956-debb63d90029?auto=format&fit=crop&w=600&q=80",
+  "sofa-and-cushion-covers": "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=600&q=80",
+  "leather-restoration": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80",
+  "comforters-and-duvets": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80",
+  "pillow-cleaning-and-sanitisation": "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=600&q=80",
+  "blankets-and-quilts": "https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?auto=format&fit=crop&w=600&q=80",
+  "hotel-bed-linen": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
+  "spa-and-salon-towels": "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80",
+};
+
+const categoryCovers: Record<string, string> = {
+  "Home Fabrics": "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80",
+  "Bedding & Linen": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80",
+  "Upholstery": "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=600&q=80",
+  "Commercial": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
+};
+
 function ServicesIndex() {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -115,9 +134,18 @@ function ServicesIndex() {
                   <Link
                     to="/services/$slug"
                     params={{ slug: s.slug }}
-                    className="group flex h-full flex-col justify-between p-8 transition-colors hover:bg-card"
+                    className="group flex h-full flex-col justify-between p-8 transition-colors hover:bg-card border-b border-r border-border"
                   >
                     <div>
+                      {/* Service Card Cover Photo */}
+                      <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-slate-100 mb-6">
+                        <img
+                          src={s.image || serviceCoverImages[s.slug] || categoryCovers[s.category] || "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80"}
+                          alt={s.name}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      </div>
                       <div className="flex items-start justify-between gap-4">
                         <span className="eyebrow text-brass">{s.category}</span>
                         <ArrowUpRight

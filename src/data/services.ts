@@ -12,6 +12,8 @@ export type Service = {
   benefits: string[];
   process: { title: string; body: string }[];
   faqs: ServiceFaq[];
+  image?: string;
+  prices?: { name: string; prices: Record<string, string> }[];
 };
 
 const p = (
@@ -887,3 +889,148 @@ export const serviceCategories = [
 export function getService(slug: string): Service | undefined {
   return services.find((s) => s.slug === slug);
 }
+
+export const servicePricingData: Record<string, { name: string; prices: Record<string, string> }[]> = {
+  "curtain-cleaning": [
+    { name: "Curtain W/o Lining (per sq. ft.)", prices: { "Premium Laundry": "9", "Dry Clean": "9", "Luxe Service": "10" } },
+    { name: "Curtain W Lining (per sq. ft.)", prices: { "Premium Laundry": "12", "Dry Clean": "12", "Luxe Service": "15" } }
+  ],
+  "curtains-and-drapes": [
+    { name: "Curtain W/o Lining (per sq. ft.)", prices: { "Premium Laundry": "9", "Dry Clean": "9", "Luxe Service": "10" } },
+    { name: "Curtain W Lining (per sq. ft.)", prices: { "Premium Laundry": "12", "Dry Clean": "12", "Luxe Service": "15" } }
+  ],
+  "carpet-cleaning": [
+    { name: "Carpet (per sq. ft.)", prices: { "Premium Laundry": "46", "Dry Clean": "46", "Luxe Service": "60", "Wash & Fold": "40", "Wash & Iron": "40" } }
+  ],
+  "carpets-and-area-rugs": [
+    { name: "Carpet (per sq. ft.)", prices: { "Premium Laundry": "46", "Dry Clean": "46", "Luxe Service": "60", "Wash & Fold": "40", "Wash & Iron": "40" } }
+  ],
+  "blanket-cleaning": [
+    { name: "Blanket Single", prices: { "Premium Laundry": "288", "Dry Clean": "288", "Premium Steam Press": "120", "Luxe Service": "460", "Regular Wash & Iron": "220", "Regular Wash & Fold": "200" } },
+    { name: "Blanket Double", prices: { "Premium Laundry": "403", "Dry Clean": "403", "Premium Steam Press": "120", "Luxe Service": "645", "Regular Wash & Iron": "300", "Regular Wash & Fold": "250" } },
+    { name: "Blanket King/Queen size", prices: { "Premium Laundry": "518", "Dry Clean": "518", "Premium Steam Press": "200", "Luxe Service": "830", "Regular Wash & Iron": "350", "Regular Wash & Fold": "300" } }
+  ],
+  "blankets-and-quilts": [
+    { name: "Blanket Single", prices: { "Premium Laundry": "288", "Dry Clean": "288", "Premium Steam Press": "120", "Luxe Service": "460", "Regular Wash & Iron": "220", "Regular Wash & Fold": "200" } },
+    { name: "Blanket Double", prices: { "Premium Laundry": "403", "Dry Clean": "403", "Premium Steam Press": "120", "Luxe Service": "645", "Regular Wash & Iron": "300", "Regular Wash & Fold": "250" } },
+    { name: "Blanket King/Queen size", prices: { "Premium Laundry": "518", "Dry Clean": "518", "Premium Steam Press": "200", "Luxe Service": "830", "Regular Wash & Iron": "350", "Regular Wash & Fold": "300" } }
+  ],
+  "comforter-cleaning": [
+    { name: "Quilt Single", prices: { "Premium Laundry": "288", "Dry Clean": "288", "Premium Steam Press": "120", "Luxe Service": "460", "Regular Wash & Iron": "220", "Regular Wash & Fold": "200" } },
+    { name: "Quilt Double", prices: { "Premium Laundry": "403", "Dry Clean": "403", "Premium Steam Press": "120", "Luxe Service": "645", "Regular Wash & Iron": "300", "Regular Wash & Fold": "250" } },
+    { name: "Blanket/Quilt King/Queen", prices: { "Premium Laundry": "518", "Dry Clean": "518", "Premium Steam Press": "200", "Luxe Service": "830", "Regular Wash & Iron": "350", "Regular Wash & Fold": "300" } }
+  ],
+  "duvet-cleaning": [
+    { name: "Quilt Single", prices: { "Premium Laundry": "288", "Dry Clean": "288", "Premium Steam Press": "120", "Luxe Service": "460", "Regular Wash & Iron": "220", "Regular Wash & Fold": "200" } },
+    { name: "Quilt Double", prices: { "Premium Laundry": "403", "Dry Clean": "403", "Premium Steam Press": "120", "Luxe Service": "645", "Regular Wash & Iron": "300", "Regular Wash & Fold": "250" } },
+    { name: "Blanket/Quilt King/Queen", prices: { "Premium Laundry": "518", "Dry Clean": "518", "Premium Steam Press": "200", "Luxe Service": "830", "Regular Wash & Iron": "350", "Regular Wash & Fold": "300" } }
+  ],
+  "comforters-and-duvets": [
+    { name: "Quilt Single", prices: { "Premium Laundry": "288", "Dry Clean": "288", "Premium Steam Press": "120", "Luxe Service": "460", "Regular Wash & Iron": "220", "Regular Wash & Fold": "200" } },
+    { name: "Quilt Double", prices: { "Premium Laundry": "403", "Dry Clean": "403", "Premium Steam Press": "120", "Luxe Service": "645", "Regular Wash & Iron": "300", "Regular Wash & Fold": "250" } },
+    { name: "Blanket/Quilt King/Queen", prices: { "Premium Laundry": "518", "Dry Clean": "518", "Premium Steam Press": "200", "Luxe Service": "830", "Regular Wash & Iron": "350", "Regular Wash & Fold": "300" } }
+  ],
+  "pillow-cleaning": [
+    { name: "Pillow", prices: { "Premium Laundry": "230", "Dry Clean": "230", "Premium Steam Press": "30", "Luxe Service": "370", "Regular Wash & Iron": "150-300", "Regular Wash & Fold": "150-300" } },
+    { name: "Cushion", prices: { "Premium Laundry": "115", "Dry Clean": "115", "Luxe Service": "185", "Regular Wash & Iron": "60-180", "Regular Wash & Fold": "60-180" } }
+  ],
+  "pillow-cleaning-and-sanitisation": [
+    { name: "Pillow", prices: { "Premium Laundry": "230", "Dry Clean": "230", "Premium Steam Press": "30", "Luxe Service": "370", "Regular Wash & Iron": "150-300", "Regular Wash & Fold": "150-300" } },
+    { name: "Cushion", prices: { "Premium Laundry": "115", "Dry Clean": "115", "Luxe Service": "185", "Regular Wash & Iron": "60-180", "Regular Wash & Fold": "60-180" } }
+  ],
+  "sofa-cover-cleaning": [
+    { name: "Sofa Cover", prices: { "Premium Laundry": "81", "Dry Clean": "81", "Premium Steam Press": "30", "Luxe Service": "130", "Regular Wash & Iron": "42-390", "Regular Wash & Fold": "42-390" } },
+    { name: "Cushion Cover", prices: { "Premium Laundry": "58", "Dry Clean": "58", "Premium Steam Press": "30", "Luxe Service": "95", "Regular Wash & Iron": "40-100", "Regular Wash & Fold": "30-100" } },
+    { name: "Pillow Cover", prices: { "Premium Laundry": "58", "Dry Clean": "58", "Premium Steam Press": "30", "Luxe Service": "95", "Regular Wash & Iron": "30-100", "Regular Wash & Fold": "25-120" } }
+  ],
+  "sofa-and-cushion-covers": [
+    { name: "Sofa Cover", prices: { "Premium Laundry": "81", "Dry Clean": "81", "Premium Steam Press": "30", "Luxe Service": "130", "Regular Wash & Iron": "42-390", "Regular Wash & Fold": "42-390" } },
+    { name: "Cushion Cover", prices: { "Premium Laundry": "58", "Dry Clean": "58", "Premium Steam Press": "30", "Luxe Service": "95", "Regular Wash & Iron": "40-100", "Regular Wash & Fold": "30-100" } },
+    { name: "Pillow Cover", prices: { "Premium Laundry": "58", "Dry Clean": "58", "Premium Steam Press": "30", "Luxe Service": "95", "Regular Wash & Iron": "30-100", "Regular Wash & Fold": "25-120" } }
+  ],
+  "cushion-cover-cleaning": [
+    { name: "Cushion Cover", prices: { "Premium Laundry": "58", "Dry Clean": "58", "Premium Steam Press": "30", "Luxe Service": "95", "Regular Wash & Iron": "40-100", "Regular Wash & Fold": "30-100" } },
+    { name: "Pillow Cover", prices: { "Premium Laundry": "58", "Dry Clean": "58", "Premium Steam Press": "30", "Luxe Service": "95", "Regular Wash & Iron": "30-100", "Regular Wash & Fold": "25-120" } }
+  ],
+  "bedsheet-cleaning": [
+    { name: "Bed Sheet Single", prices: { "Premium Laundry": "138", "Dry Clean": "138", "Premium Steam Press": "40", "Luxe Service": "220", "Regular Wash & Iron": "70", "Regular Wash & Fold": "50" } },
+    { name: "Bed Sheet Double", prices: { "Premium Laundry": "196", "Dry Clean": "196", "Premium Steam Press": "40", "Luxe Service": "315", "Regular Wash & Iron": "90", "Regular Wash & Fold": "70" } },
+    { name: "Bed Cover Single", prices: { "Premium Laundry": "138", "Dry Clean": "138", "Premium Steam Press": "40", "Luxe Service": "220", "Regular Wash & Iron": "70", "Regular Wash & Fold": "50" } },
+    { name: "Bed Cover Double", prices: { "Premium Laundry": "196", "Dry Clean": "196", "Premium Steam Press": "40", "Luxe Service": "315", "Regular Wash & Iron": "90", "Regular Wash & Fold": "70" } }
+  ],
+  "hotel-bed-linen": [
+    { name: "Bed Sheet Single", prices: { "Premium Laundry": "138", "Dry Clean": "138", "Premium Steam Press": "40", "Luxe Service": "220", "Regular Wash & Iron": "70", "Regular Wash & Fold": "50" } },
+    { name: "Bed Sheet Double", prices: { "Premium Laundry": "196", "Dry Clean": "196", "Premium Steam Press": "40", "Luxe Service": "315", "Regular Wash & Iron": "90", "Regular Wash & Fold": "70" } },
+    { name: "Bed Cover Single", prices: { "Premium Laundry": "138", "Dry Clean": "138", "Premium Steam Press": "40", "Luxe Service": "220", "Regular Wash & Iron": "70", "Regular Wash & Fold": "50" } },
+    { name: "Bed Cover Double", prices: { "Premium Laundry": "196", "Dry Clean": "196", "Premium Steam Press": "40", "Luxe Service": "315", "Regular Wash & Iron": "90", "Regular Wash & Fold": "70" } },
+    { name: "Bed Cover/Sheet King/Queen", prices: { "Regular Wash & Iron": "110", "Regular Wash & Fold": "90" } }
+  ],
+  "spa-and-salon-towels": [
+    { name: "Hand Towel", prices: { "Premium Laundry": "42", "Dry Clean": "42", "Luxe Service": "65", "Regular Wash & Iron": "25", "Regular Wash & Fold": "20" } },
+    { name: "Bath Towel Medium", prices: { "Premium Laundry": "86", "Dry Clean": "86", "Premium Steam Press": "25", "Luxe Service": "140", "Regular Wash & Iron": "50", "Regular Wash & Fold": "40" } },
+    { name: "Bath Towel Large", prices: { "Premium Laundry": "104", "Dry Clean": "104", "Premium Steam Press": "25", "Luxe Service": "165" } },
+    { name: "Bath Robe", prices: { "Premium Laundry": "115", "Dry Clean": "115", "Premium Steam Press": "30", "Luxe Service": "185", "Regular Wash & Iron": "50", "Regular Wash & Fold": "40" } },
+    { name: "Bath Mat", prices: { "Regular Wash & Iron": "50", "Regular Wash & Fold": "40" } }
+  ],
+  "table-and-banquet-linen": [
+    { name: "Table Cloth", prices: { "Premium Laundry": "92", "Dry Clean": "92", "Premium Steam Press": "30", "Luxe Service": "145", "Regular Wash & Iron": "45", "Regular Wash & Fold": "30" } },
+    { name: "Table Runner", prices: { "Premium Laundry": "40", "Dry Clean": "40", "Premium Steam Press": "25", "Luxe Service": "65" } },
+    { name: "Table Napkin/Mat", prices: { "Regular Wash & Iron": "45", "Regular Wash & Fold": "30" } }
+  ],
+  "silk-saree-specialist": [
+    { name: "Saree - Silk", prices: { "Roll press": "132", "Polish - Extra": "5", "Dry Clean": "265", "Starch - Extra": "5" } },
+    { name: "Saree - Silk with Zari", prices: { "Roll press": "132", "Polish - Extra": "5", "Dry Clean": "299", "Starch - Extra": "5" } },
+    { name: "Saree - Cotton", prices: { "Roll press": "88", "Polish - Extra": "5", "Dry Clean": "230", "Starch - Extra": "5" } },
+    { name: "Saree - Chiffon/Crepe", prices: { "Roll press": "132", "Polish - Extra": "5", "Dry Clean": "250", "Starch - Extra": "5" } },
+    { name: "Saree - Designer", prices: { "Roll press": "165", "Polish - Extra": "5", "Dry Clean": "345", "Starch - Extra": "5" } },
+    { name: "Saree - Heavy work", prices: { "Roll press": "120", "Polish - Extra": "5", "Dry Clean": "460", "Starch - Extra": "5" } },
+    { name: "Saree - Work", prices: { "Roll press": "120", "Polish - Extra": "5", "Dry Clean": "368", "Starch - Extra": "5" } },
+    { name: "Saree - Jacket", prices: { "Roll press": "80", "Polish - Extra": "5", "Dry Clean": "175", "Starch - Extra": "5" } }
+  ],
+  "designer-wear-couture": [
+    { name: "Wedding Dress", prices: { "Premium Laundry": "460", "Dry Clean": "460", "Premium Steam Press": "300", "Luxe Service": "735" } },
+    { name: "Lehenga Designer", prices: { "Premium Laundry": "575", "Dry Clean": "575", "Premium Steam Press": "200", "Luxe Service": "920" } },
+    { name: "Kameez Designer", prices: { "Premium Laundry": "229", "Dry Clean": "229", "Premium Steam Press": "100", "Luxe Service": "365" } },
+    { name: "Anarkali", prices: { "Premium Laundry": "345", "Dry Clean": "345", "Premium Steam Press": "100", "Luxe Service": "550" } },
+    { name: "Blouse Designer", prices: { "Premium Laundry": "173", "Dry Clean": "173", "Premium Steam Press": "40", "Luxe Service": "275" } },
+    { name: "Lehenga Blouse", prices: { "Premium Laundry": "173", "Dry Clean": "173", "Premium Steam Press": "70", "Luxe Service": "275" } }
+  ],
+  "wool-winter-wear": [
+    { name: "Sweater", prices: { "Premium Laundry": "196", "Dry Clean": "196", "Premium Steam Press": "40", "Luxe Service": "315", "Regular Wash & Iron": "120", "Regular Wash & Fold": "100" } },
+    { name: "Jerkin", prices: { "Premium Laundry": "196", "Dry Clean": "196", "Premium Steam Press": "60", "Luxe Service": "315", "Regular Wash & Iron": "120", "Regular Wash & Fold": "90" } },
+    { name: "Jacket", prices: { "Premium Laundry": "196", "Dry Clean": "196", "Premium Steam Press": "60", "Luxe Service": "315" } },
+    { name: "Leather Jacket", prices: { "Premium Laundry": "460", "Dry Clean": "460", "Luxe Service": "735" } },
+    { name: "Pullover", prices: { "Premium Laundry": "145", "Dry Clean": "145", "Premium Steam Press": "40", "Luxe Service": "230" } }
+  ],
+  "garments-and-silks": [
+    { name: "Shirt / Pant", prices: { "Premium Laundry": "98", "Dry Clean": "98", "Premium Steam Press": "30", "Luxe Service": "155", "Regular Wash & Iron": "45", "Regular Wash & Fold": "30" } },
+    { name: "T-Shirt", prices: { "Premium Laundry": "98", "Dry Clean": "98", "Premium Steam Press": "30", "Luxe Service": "155", "Regular Wash & Iron": "45", "Regular Wash & Fold": "30" } },
+    { name: "Shirt Silk", prices: { "Premium Laundry": "144", "Dry Clean": "144", "Premium Steam Press": "40", "Luxe Service": "230" } },
+    { name: "Dhothi Silk Single", prices: { "Premium Laundry": "196", "Dry Clean": "196", "Premium Steam Press": "60", "Luxe Service": "315" } },
+    { name: "Dhothi Cotton Single", prices: { "Premium Laundry": "138", "Dry Clean": "138", "Premium Steam Press": "60", "Luxe Service": "220" } },
+    { name: "Kurtha Cotton", prices: { "Premium Laundry": "98", "Dry Clean": "98", "Premium Steam Press": "40", "Luxe Service": "155", "Regular Wash & Iron": "50", "Regular Wash & Fold": "35" } },
+    { name: "Kurtha Silk", prices: { "Premium Laundry": "138", "Dry Clean": "138", "Premium Steam Press": "50", "Luxe Service": "220" } },
+    { name: "Pyjama Silk", prices: { "Premium Laundry": "104", "Dry Clean": "115", "Premium Steam Press": "60", "Luxe Service": "185" } },
+    { name: "Pyjama Cotton", prices: { "Premium Laundry": "98", "Dry Clean": "98", "Premium Steam Press": "40", "Luxe Service": "155" } },
+    { name: "Nehru Jacket", prices: { "Premium Laundry": "173", "Dry Clean": "173", "Premium Steam Press": "40", "Luxe Service": "275" } },
+    { name: "Blazer", prices: { "Premium Laundry": "242-316", "Dry Clean": "242-316", "Premium Steam Press": "120", "Luxe Service": "385-505" } },
+    { name: "Waist Coat", prices: { "Premium Laundry": "127", "Dry Clean": "127", "Premium Steam Press": "30", "Luxe Service": "205" } },
+    { name: "Tie", prices: { "Premium Laundry": "58", "Dry Clean": "58", "Premium Steam Press": "30", "Luxe Service": "95" } },
+    { name: "Safari Jacket", prices: { "Premium Laundry": "242", "Dry Clean": "242", "Premium Steam Press": "60", "Luxe Service": "385" } },
+    { name: "Sherwani Top", prices: { "Premium Laundry": "403", "Dry Clean": "403", "Premium Steam Press": "120", "Luxe Service": "645" } },
+    { name: "Sherwani Bottom", prices: { "Premium Laundry": "173", "Dry Clean": "173", "Premium Steam Press": "60", "Luxe Service": "275" } },
+    { name: "Sherwani Shawl", prices: { "Premium Laundry": "138", "Dry Clean": "138", "Premium Steam Press": "40", "Luxe Service": "220" } },
+    { name: "Top / Kurti", prices: { "Premium Laundry": "102", "Dry Clean": "102", "Premium Steam Press": "30", "Luxe Service": "165", "Regular Wash & Iron": "45", "Regular Wash & Fold": "30" } },
+    { name: "Bottom/Salwar Regular", prices: { "Premium Laundry": "98", "Dry Clean": "98", "Premium Steam Press": "30", "Luxe Service": "155", "Regular Wash & Iron": "45", "Regular Wash & Fold": "30" } },
+    { name: "Bottom Silk", prices: { "Premium Laundry": "115", "Dry Clean": "115", "Premium Steam Press": "40", "Luxe Service": "185" } },
+    { name: "Kameez Regular", prices: { "Premium Laundry": "102", "Dry Clean": "102", "Premium Steam Press": "30", "Luxe Service": "165", "Regular Wash & Iron": "50", "Regular Wash & Fold": "35" } },
+    { name: "Kameez Long", prices: { "Premium Laundry": "171", "Dry Clean": "171", "Premium Steam Press": "60", "Luxe Service": "275", "Regular Wash & Iron": "70", "Regular Wash & Fold": "50" } },
+    { name: "Kameez Silk", prices: { "Premium Laundry": "171", "Dry Clean": "171", "Premium Steam Press": "60", "Luxe Service": "275" } },
+    { name: "Blouse Cotton", prices: { "Premium Laundry": "86", "Dry Clean": "86", "Premium Steam Press": "30", "Luxe Service": "140", "Regular Wash & Iron": "45", "Regular Wash & Fold": "30" } },
+    { name: "Dupatta Cotton", prices: { "Premium Laundry": "98", "Dry Clean": "98", "Premium Steam Press": "30", "Luxe Service": "155", "Regular Wash & Iron": "50", "Regular Wash & Fold": "35" } },
+    { name: "Dupatta Silk", prices: { "Premium Laundry": "98", "Dry Clean": "140", "Premium Steam Press": "30", "Luxe Service": "225" } },
+    { name: "Skirt Long", prices: { "Premium Laundry": "130", "Dry Clean": "130", "Premium Steam Press": "60", "Luxe Service": "210", "Regular Wash & Iron": "70", "Regular Wash & Fold": "60" } },
+    { name: "Dress", prices: { "Premium Laundry": "144", "Dry Clean": "144", "Premium Steam Press": "40", "Luxe Service": "230" } },
+    { name: "Shawl", prices: { "Premium Laundry": "138", "Dry Clean": "138", "Premium Steam Press": "40", "Luxe Service": "220", "Regular Wash & Iron": "80", "Regular Wash & Fold": "60" } }
+  ]
+};

@@ -1,8 +1,9 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Check } from "lucide-react";
-import { getService, services, type Service } from "@/data/services";
+import { Check, ArrowUpRight } from "lucide-react";
+import { getService, services, type Service, servicePricingData } from "@/data/services";
 import { site } from "@/data/site";
 import { Reveal } from "@/components/site/Reveal";
+import { getStoredCMS } from "@/lib/admin-store";
 import {
   Accordion,
   AccordionContent,
@@ -13,7 +14,8 @@ import linenStack from "@/assets/linen-stack.jpg";
 
 export const Route = createFileRoute("/services/$slug")({
   loader: ({ params }) => {
-    const service = getService(params.slug);
+    const cms = getStoredCMS();
+    const service = cms.services.find((s) => s.slug === params.slug) || getService(params.slug);
     if (!service) throw notFound();
     return { service };
   },
@@ -75,6 +77,47 @@ export const Route = createFileRoute("/services/$slug")({
   notFoundComponent: ServiceNotFound,
 });
 
+const serviceCoverFallbackImages: Record<string, string> = {
+  // Real active slugs
+  "curtain-cleaning": "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80",
+  "carpet-cleaning": "https://images.unsplash.com/photo-1576016770956-debb63d90029?auto=format&fit=crop&w=1200&q=80",
+  "blanket-cleaning": "https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?auto=format&fit=crop&w=1200&q=80",
+  "sofa-cover-cleaning": "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1200&q=80",
+  "bedsheet-cleaning": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80",
+  "comforter-cleaning": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80",
+  "duvet-cleaning": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80",
+  "pillow-cleaning": "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=1200&q=80",
+  "cushion-cover-cleaning": "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1200&q=80",
+  "quilt-cleaning": "https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?auto=format&fit=crop&w=1200&q=80",
+  "table-linen-cleaning": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+  "home-linen-cleaning": "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80",
+  "commercial-linen-cleaning": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+  "hotel-linen-cleaning": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+  "office-fabric-care": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80",
+  "general-laundry": "https://images.unsplash.com/photo-1545173168-9f19472c043a?auto=format&fit=crop&w=1200&q=80",
+
+  // Legacy mappings for backward compatibility
+  "curtains-and-drapes": "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80",
+  "carpets-and-area-rugs": "https://images.unsplash.com/photo-1576016770956-debb63d90029?auto=format&fit=crop&w=1200&q=80",
+  "sofa-and-cushion-covers": "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1200&q=80",
+  "leather-restoration": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80",
+  "comforters-and-duvets": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80",
+  "pillow-cleaning-and-sanitisation": "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=1200&q=80",
+  "blankets-and-quilts": "https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?auto=format&fit=crop&w=1200&q=80",
+  "hotel-bed-linen": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+  "spa-and-salon-towels": "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80",
+};
+
+const categoryCoverFallbackImages: Record<string, string> = {
+  "Home Fabrics": "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80",
+  "Bedding & Linen": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80",
+  "Upholstery": "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1200&q=80",
+  "Commercial": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+};
+
+
+
+
 function ServiceNotFound() {
   return (
     <div className="mx-auto max-w-2xl px-5 py-32 text-center">
@@ -92,12 +135,22 @@ function ServiceNotFound() {
 
 function ServicePage() {
   const { service: s } = Route.useLoaderData() as { service: Service };
-  const related = services.filter((r) => r.category === s.category && r.slug !== s.slug).slice(0, 3);
+  
+  // Ensure we always have exactly 3 related cards to fill the layout columns
+  const related = services.filter((r) => r.category === s.category && r.slug !== s.slug);
+  const displayRelated = related.length >= 3 
+    ? related.slice(0, 3) 
+    : [...related, ...services.filter((r) => r.slug !== s.slug && r.category !== s.category)].slice(0, 3);
+
+  const pricingItems = s.prices && s.prices.length > 0 ? s.prices : (servicePricingData[s.slug] || []);
+  const uniquePriceHeaders = Array.from(
+    new Set(pricingItems.flatMap((item) => Object.keys(item.prices)))
+  );
 
   return (
     <article>
-      <header className="border-b border-border px-5 py-16 md:px-10 md:py-24">
-        <div className="mx-auto grid max-w-[88rem] gap-12 lg:grid-cols-[1.35fr_1fr] lg:items-end">
+      <header className="border-b border-border px-5 py-16 md:px-10 md:py-24 bg-card/10">
+        <div className="mx-auto grid max-w-[88rem] gap-10 lg:grid-cols-[1.25fr_0.85fr_0.9fr] lg:items-center">
           <div>
             <nav aria-label="Breadcrumb" className="eyebrow text-muted-foreground">
               <Link to="/services" className="hover:text-foreground">
@@ -124,6 +177,16 @@ function ServicePage() {
               </Link>
             </div>
           </div>
+
+          {/* Service Cover Photo */}
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-slate-100 border border-border shadow-lift">
+            <img
+              src={s.image || serviceCoverFallbackImages[s.slug] || categoryCoverFallbackImages[s.category] || "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80"}
+              alt={s.name}
+              className="h-full w-full object-cover"
+            />
+          </div>
+
           <dl className="grid grid-cols-2 gap-px bg-border">
             <Fact label="Turnaround" value={s.turnaround} />
             <Fact label="Category" value={s.category} />
@@ -168,6 +231,48 @@ function ServicePage() {
         </div>
       </section>
 
+      {/* Standard pricing catalog directory */}
+      {pricingItems.length > 0 && (
+        <section className="border-b border-border bg-background px-5 py-16 md:px-10 md:py-24">
+          <div className="mx-auto max-w-[88rem]">
+            <span className="eyebrow text-brass">Standard Pricing Directory</span>
+            <h2 className="mt-4 font-display text-4xl leading-tight md:text-5xl">
+              Fabric care investment catalogue
+            </h2>
+            <p className="mt-2 text-xs md:text-sm text-ink-soft max-w-xl">
+              All prices listed below represent our base standard rates (starting from, exclusive of GST) and may vary depending on material condition, sizing, and specific details.
+            </p>
+            <div className="mt-10 overflow-x-auto border border-border rounded-xl shadow-lift bg-card/5">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-card text-foreground border-b border-border font-bold uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th className="p-4 md:p-5">Item Type</th>
+                    {uniquePriceHeaders.map((hdr) => (
+                      <th key={hdr} className="p-4 md:p-5 text-center">{hdr}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border text-foreground">
+                  {pricingItems.map((item) => (
+                    <tr key={item.name} className="hover:bg-card/20 transition-colors">
+                      <td className="p-4 md:p-5 font-bold text-foreground">{item.name}</td>
+                      {uniquePriceHeaders.map((hdr) => (
+                        <td key={hdr} className="p-4 md:p-5 text-center font-mono font-bold text-ink">
+                          {item.prices[hdr] && item.prices[hdr] !== "-" ? `₹${item.prices[hdr]}` : "—"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-4 text-[10px] text-muted-foreground italic font-semibold text-right">
+              * Note: All prices shown above are starting rates exclusive of GST.
+            </p>
+          </div>
+        </section>
+      )}
+
       <section className="border-b border-border bg-ink px-5 py-16 text-background md:px-10 md:py-24">
         <div className="mx-auto max-w-[88rem]">
           <p className="eyebrow text-brass">Cleaning process</p>
@@ -192,26 +297,41 @@ function ServicePage() {
             <p className="eyebrow text-brass">FAQ</p>
             <h2 className="mt-4 font-display text-4xl">{s.name} questions</h2>
             <img
-              src={linenStack}
+              src={s.image || serviceCoverFallbackImages[s.slug] || categoryCoverFallbackImages[s.category] || linenStack}
               alt={`Freshly cleaned linen prepared after ${s.name.toLowerCase()} at the Spin & Dry studio`}
               width={1200}
               height={1200}
               loading="lazy"
-              className="mt-10 hidden aspect-square w-full object-cover lg:block"
+              className="mt-10 hidden aspect-square w-full object-cover lg:block rounded-xl"
             />
           </div>
-          <Accordion type="single" collapsible className="w-full">
-            {s.faqs.map((f, i) => (
-              <AccordionItem key={f.q} value={`item-${i}`}>
-                <AccordionTrigger className="text-left font-display text-xl hover:no-underline">
-                  {f.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-sm leading-relaxed text-ink-soft">
-                  {f.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <div className="flex flex-col justify-between h-full gap-8">
+            <Accordion type="single" collapsible className="w-full">
+              {s.faqs.map((f, i) => (
+                <AccordionItem key={f.q} value={`item-${i}`}>
+                  <AccordionTrigger className="text-left font-display text-xl hover:no-underline">
+                    {f.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm leading-relaxed text-ink-soft">
+                    {f.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+            
+            <div className="border border-brass/25 bg-brass/5 p-6 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:border-brass/45">
+              <div>
+                <h4 className="font-display text-lg font-bold text-slate-900">Have a specific fabric concern?</h4>
+                <p className="text-xs text-ink-soft mt-1">Speak directly with our studio conservators for specialized advice.</p>
+              </div>
+              <Link
+                to="/contact"
+                className="bg-ink px-4 py-2.5 text-[10px] font-bold tracking-[0.12em] text-background uppercase shrink-0 transition-colors hover:bg-ink-soft"
+              >
+                Contact Studio
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -236,19 +356,24 @@ function ServicePage() {
             </Link>
           </div>
 
-          {related.length > 0 && (
+          {displayRelated.length > 0 && (
             <>
-              <h2 className="mt-20 font-display text-3xl">Related {s.category.toLowerCase()} care</h2>
+              <h2 className="mt-20 font-display text-3xl">Related care services</h2>
               <ul className="mt-8 grid gap-px bg-border md:grid-cols-3">
-                {related.map((r) => (
-                  <li key={r.slug} className="bg-background">
+                {displayRelated.map((r) => (
+                  <li key={r.slug} className="bg-background overflow-hidden">
                     <Link
                       to="/services/$slug"
                       params={{ slug: r.slug }}
-                      className="block h-full p-8 transition-colors hover:bg-card"
+                      className="group block h-full p-8 border border-transparent hover:border-brass/35 hover:-translate-y-1 hover:bg-card shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
                     >
-                      <h3 className="font-display text-2xl">{r.name}</h3>
-                      <p className="mt-3 text-sm text-ink-soft">{r.summary}</p>
+                      <div>
+                        <div className="flex items-start justify-between gap-4">
+                          <h3 className="font-display text-2xl group-hover:text-brass transition-colors duration-300">{r.name}</h3>
+                          <ArrowUpRight className="size-5 text-brass/40 group-hover:text-brass group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 shrink-0" />
+                        </div>
+                        <p className="mt-3 text-sm text-ink-soft line-clamp-3 leading-relaxed">{r.summary}</p>
+                      </div>
                     </Link>
                   </li>
                 ))}

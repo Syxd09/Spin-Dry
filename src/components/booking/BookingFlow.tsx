@@ -3,10 +3,11 @@ import { Link } from "@tanstack/react-router";
 import { Check, Loader2, MapPin, ArrowLeft, ArrowRight, CircleCheck, Sparkles, MessageSquare, Printer, ShieldCheck, Clock, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { services, serviceCategories } from "@/data/services";
+import { services, serviceCategories, type Service, servicePricingData } from "@/data/services";
 import { site, timeSlots } from "@/data/site";
 import { haversineKm, loadGoogleMaps, mapsBrowserKey } from "@/lib/geo";
 import { cn } from "@/lib/utils";
+import { getStoredOrders, type AdminOrder, getStoredCMS } from "@/lib/admin-store";
 
 export type BookingDraft = {
   serviceSlugs: string[];
@@ -36,7 +37,15 @@ const contactSchema = z.object({
     .min(8, "Enter a valid phone number")
     .max(20)
     .regex(/^[0-9+\-\s()]+$/, "Phone can only contain digits and + - ( )"),
-  email: z.string().trim().email("Enter a valid email").max(160),
+  email: z
+    .string()
+    .trim()
+    .max(160)
+    .optional()
+    .or(z.literal(""))
+    .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: "Enter a valid email address",
+    }),
 });
 
 type Errs = {
@@ -49,6 +58,24 @@ type Errs = {
   phone?: string;
   email?: string;
 };
+
+function getServiceStartingPrice(s: Service): string {
+  const prices = s.prices && s.prices.length > 0 ? s.prices : (servicePricingData[s.slug] || []);
+  if (prices.length > 0) {
+    const firstItem = prices[0];
+    if (firstItem) {
+      const priceKeys = Object.keys(firstItem.prices);
+      if (priceKeys.length > 0) {
+        const firstPriceKey = priceKeys[0];
+        if (firstPriceKey) {
+          const priceValue = firstItem.prices[firstPriceKey];
+          return `₹${priceValue} (${firstPriceKey})`;
+        }
+      }
+    }
+  }
+  return "Quote on Intake";
+}
 
 const steps = ["Services", "Logistics", "Schedule", "Address", "Details", "Review"] as const;
 
@@ -95,15 +122,66 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
   const inRadius =
     draft.distanceKm === null ? null : draft.distanceKm <= site.pickupRadiusKm;
 
+  const existingBookings = useMemo(() => {
+    if (typeof window === "undefined") return [];
+    return getStoredOrders();
+  }, [step, draft.date]);
+
+  const cmsData = useMemo(() => {
+    if (typeof window === "undefined") return { services: [] };
+    return getStoredCMS();
+  }, []);
+
+  const activeServices = useMemo(() => {
+    return cmsData.services && cmsData.services.length > 0 ? cmsData.services : services;
+  }, [cmsData.services]);
+
   const selected = useMemo(
-    () => services.filter((s) => draft.serviceSlugs.includes(s.slug)),
-    [draft.serviceSlugs],
+    () => activeServices.filter((s) => draft.serviceSlugs.includes(s.slug)),
+    [draft.serviceSlugs, activeServices],
   );
 
   const filteredServices = useMemo(() => {
-    if (selectedCategory === "All") return services;
-    return services.filter((s) => s.category === selectedCategory);
-  }, [selectedCategory]);
+    if (selectedCategory === "All") return activeServices;
+    return activeServices.filter((s) => s.category === selectedCategory);
+  }, [selectedCategory, activeServices]);
+
+  // Reset selected slot to first available slot if it becomes invalid (past or booked)
+  useEffect(() => {
+    if (!draft.date) return;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const todayStr = `${year}-${month}-${day}`;
+    const currentHour = now.getHours();
+
+    const isCurrentSlotInvalid = () => {
+      if (!draft.slot) return true;
+      const startHour = parseInt(draft.slot.split(":")[0] || "0", 10);
+      const isPast = draft.date < todayStr || (draft.date === todayStr && currentHour >= startHour);
+      
+      const slotBookings = existingBookings.filter(
+        (o) => o.date === draft.date && o.slot === draft.slot && o.status !== "Cancelled"
+      );
+      const isBooked = slotBookings.length >= 2;
+      
+      return isPast || isBooked;
+    };
+
+    if (isCurrentSlotInvalid()) {
+      const firstAvailable = timeSlots.find((slot) => {
+        const startHour = parseInt(slot.split(":")[0] || "0", 10);
+        const isPast = draft.date < todayStr || (draft.date === todayStr && currentHour >= startHour);
+        const slotBookings = existingBookings.filter(
+          (o) => o.date === draft.date && o.slot === slot && o.status !== "Cancelled"
+        );
+        const isBooked = slotBookings.length >= 2;
+        return !isPast && !isBooked;
+      });
+      setDraft((d) => ({ ...d, slot: firstAvailable || "" }));
+    }
+  }, [draft.date, existingBookings]);
 
   useEffect(() => {
     if (step !== 3 || !mapsBrowserKey) return;
@@ -358,17 +436,22 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
                 <tr>
                   <th className="p-2.5 border-b border-border">Service Name</th>
                   <th className="p-2.5 border-b border-border text-center">Category</th>
+                  <th className="p-2.5 border-b border-border text-center">Estimated Rate</th>
                   <th className="p-2.5 border-b border-border text-center">Estimated Qty</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border text-foreground">
-                {selected.map((s) => (
-                  <tr key={s.slug}>
-                    <td className="p-2.5 font-bold">{s.name}</td>
-                    <td className="p-2.5 text-center text-muted-foreground">{s.category}</td>
-                    <td className="p-2.5 text-center font-mono font-bold">{draft.itemQuantities[s.slug] || 1}</td>
-                  </tr>
-                ))}
+                {selected.map((s) => {
+                  const rate = getServiceStartingPrice(s);
+                  return (
+                    <tr key={s.slug}>
+                      <td className="p-2.5 font-bold">{s.name}</td>
+                      <td className="p-2.5 text-center text-muted-foreground">{s.category}</td>
+                      <td className="p-2.5 text-center font-semibold text-brass">{rate}</td>
+                      <td className="p-2.5 text-center font-mono font-bold">{draft.itemQuantities[s.slug] || 1}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -512,6 +595,9 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
                         <span className="block text-sm font-semibold">{s.name}</span>
                         <span className="mt-0.5 block text-xs text-muted-foreground">
                           {s.category} · {s.turnaround}
+                        </span>
+                        <span className="mt-1 block text-xs font-bold text-brass">
+                          Starting rate: {getServiceStartingPrice(s)}
                         </span>
                       </div>
                       <span
@@ -662,22 +748,67 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
             <div className="mt-8">
               <p className="eyebrow text-muted-foreground mb-3">Two-Hour Collection Slots</p>
               <div className="grid gap-2.5 sm:grid-cols-3">
-                {timeSlots.map((slot) => (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => setDraft((d) => ({ ...d, slot }))}
-                    className={cn(
-                      "border p-4 text-sm transition-all flex items-center justify-between",
-                      draft.slot === slot
-                        ? "border-brass bg-brass text-ink font-bold shadow-sm"
-                        : "border-border bg-card hover:border-border/80 text-ink",
-                    )}
-                  >
-                    <span>{slot}</span>
-                    {draft.slot === slot && <Check className="size-4 text-ink" />}
-                  </button>
-                ))}
+                {timeSlots.map((slot) => {
+                  const now = new Date();
+                  const year = now.getFullYear();
+                  const month = String(now.getMonth() + 1).padStart(2, "0");
+                  const day = String(now.getDate()).padStart(2, "0");
+                  const todayStr = `${year}-${month}-${day}`;
+                  const currentHour = now.getHours();
+
+                  const startHour = parseInt(slot.split(":")[0] || "0", 10);
+                  const isPast = draft.date < todayStr || (draft.date === todayStr && currentHour >= startHour);
+
+                  const slotBookings = existingBookings.filter(
+                    (o) => o.date === draft.date && o.slot === slot && o.status !== "Cancelled"
+                  );
+                  const isBooked = slotBookings.length >= 2;
+
+                  if (isBooked) {
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        disabled
+                        className="border border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed p-4 text-sm flex flex-col items-center justify-center gap-0.5"
+                      >
+                        <span className="line-through">{slot}</span>
+                        <span className="text-[10px] font-sans font-bold text-rose-500 uppercase tracking-wider">Fully Booked</span>
+                      </button>
+                    );
+                  }
+
+                  if (isPast) {
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        disabled
+                        className="border border-slate-100 bg-slate-50/50 text-slate-300 cursor-not-allowed p-4 text-sm flex flex-col items-center justify-center gap-0.5"
+                      >
+                        <span>{slot}</span>
+                        <span className="text-[10px] font-sans font-bold text-slate-400 uppercase tracking-wider">Unavailable</span>
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => setDraft((d) => ({ ...d, slot }))}
+                      className={cn(
+                        "border p-4 text-sm transition-all flex items-center justify-between",
+                        draft.slot === slot
+                          ? "border-brass bg-brass text-ink font-bold shadow-sm"
+                          : "border-border bg-card hover:border-brass/35 text-ink",
+                      )}
+                    >
+                      <span>{slot}</span>
+                      {draft.slot === slot && <Check className="size-4 text-ink" />}
+                    </button>
+                  );
+                })}
               </div>
               <FieldError message={errors.slot} />
             </div>
@@ -824,7 +955,7 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
                 type="tel"
               />
               <Field
-                label="Email Address"
+                label="Email Address (Optional)"
                 value={draft.email}
                 onChange={(v) => setDraft((d) => ({ ...d, email: v }))}
                 error={errors.email}

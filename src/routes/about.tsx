@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { site, testimonials } from "@/data/site";
+import { site as staticSite, testimonials } from "@/data/site";
+import { useSiteSettings } from "@/lib/use-site-settings";
 import { Reveal } from "@/components/site/Reveal";
 import facility from "@/assets/facility.jpg";
 
@@ -53,6 +54,7 @@ const pillars = [
 ];
 
 function AboutPage() {
+  const site = useSiteSettings();
   return (
     <div>
       <header className="border-b border-border px-5 py-8 md:px-10 md:py-14">
@@ -81,7 +83,7 @@ function AboutPage() {
 
       <section className="border-b border-border px-5 py-8 md:px-10">
         <dl className="mx-auto grid max-w-[88rem] gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
-          {site.stats.map((s) => (
+          {staticSite.stats.map((s) => (
             <div key={s.label} className="bg-background p-6">
               <dt className="font-display text-4xl text-brass">{s.value}</dt>
               <dd className="mt-2 text-xs text-ink-soft">{s.label}</dd>

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { ArrowRight, ArrowUpRight, ShieldCheck, Sparkles, Star, Award, CheckCircle, Clock, MapPin } from "lucide-react";
 import { services } from "@/data/services";
 import { generalFaqs, journey, site, testimonials } from "@/data/site";
@@ -16,6 +16,25 @@ import {
 } from "@/components/ui/accordion";
 import heroFabric from "@/assets/hero-fabric.jpg";
 import linenStack from "@/assets/linen-stack.jpg";
+
+const serviceFallbackImages: Record<string, string> = {
+  "curtain-cleaning": "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80",
+  "carpet-cleaning": "https://images.unsplash.com/photo-1576016770956-debb63d90029?auto=format&fit=crop&w=600&q=80",
+  "blanket-cleaning": "https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?auto=format&fit=crop&w=600&q=80",
+  "sofa-cover-cleaning": "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=600&q=80",
+  "bedsheet-cleaning": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80",
+  "comforter-cleaning": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80",
+  "duvet-cleaning": "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=600&q=80",
+  "pillow-cleaning": "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=600&q=80",
+  "cushion-cover-cleaning": "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=600&q=80",
+  "quilt-cleaning": "https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?auto=format&fit=crop&w=600&q=80",
+  "table-linen-cleaning": "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80",
+  "home-linen-cleaning": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80",
+  "commercial-linen-cleaning": "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80",
+  "hotel-linen-cleaning": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
+  "office-fabric-care": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80",
+  "general-laundry": "https://images.unsplash.com/photo-1545173168-9f19472c043a?auto=format&fit=crop&w=600&q=80",
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -69,24 +88,54 @@ const badges = [
   "Ozone Anti-Allergen Sanitised",
 ];
 
+function HeroImageSlider({ slides }: { slides: string[] }) {
+  const [currentIdx, setCurrentIdx] = useState(0);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIdx((prev) => (prev + 1) % slides.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [slides]);
+
+  if (slides.length === 0) return null;
+
+  return (
+    <div className="absolute inset-0 size-full overflow-hidden bg-ink">
+      {slides.map((src, idx) => {
+        const isActive = idx === currentIdx;
+        return (
+          <img
+            key={src + idx}
+            src={src}
+            alt={`Luxury fabric care visual slider ${idx + 1}`}
+            loading={idx === 0 ? "eager" : "lazy"}
+            className="absolute inset-0 size-full object-cover"
+            style={{
+              opacity: isActive ? 0.55 : 0,
+              transform: isActive ? "scale(1.08) translate(1%, 0.5%)" : "scale(1.01) translate(0px, 0px)",
+              transition: "opacity 1200ms ease-in-out, transform 6000ms linear",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 function Index() {
   const cmsData = useMemo(() => getStoredCMS(), []);
   const galleryItems = cmsData.beforeAfterGallery || [];
+  const displayServices = cmsData.services || services;
+  const heroSlides = cmsData.heroSlides || [];
 
   return (
     <div>
       {/* Hero Section */}
       <section className="relative -mt-20 min-h-[90svh] overflow-hidden bg-ink pt-24 text-background">
-        <img
-          src={heroFabric}
-          alt="Close-up of layered linen and luxury cotton fabric in warm light"
-          width={1600}
-          height={1200}
-          fetchPriority="high"
-          decoding="async"
-          className="absolute inset-0 size-full object-cover opacity-35 transition-scale duration-1000 hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/90 to-ink/40" />
+        <HeroImageSlider slides={heroSlides} />
+        <div className="absolute inset-0 bg-gradient-to-r from-ink/65 via-ink/40 to-transparent" />
 
         <div className="relative mx-auto flex min-h-[calc(90svh-6rem)] max-w-[88rem] flex-col justify-between gap-10 px-5 py-10 md:px-10 md:py-14">
           <div>
@@ -110,7 +159,7 @@ function Index() {
             <div className="mt-6 flex flex-wrap items-center gap-2.5">
               {badges.map((b) => (
                 <span key={b} className="flex items-center gap-1.5 rounded border border-background/20 bg-background/5 px-3 py-1 text-xs text-background/80 backdrop-blur-sm">
-                  <CheckCircle className="size-3 text-brass" /> {b}
+                   <CheckCircle className="size-3 text-brass" /> {b}
                 </span>
               ))}
             </div>
@@ -215,22 +264,29 @@ function Index() {
           </div>
 
           <ul className="mt-10 space-y-1.5">
-            {services.map((s, i) => (
+            {displayServices.map((s, i) => (
               <Reveal as="li" key={s.slug} delay={Math.min(i * 20, 150)}>
                 <Link
                   to="/services/$slug"
                   params={{ slug: s.slug }}
                   className="group flex flex-col justify-between border-t border-border/70 py-4 px-3 transition-all duration-300 hover:bg-card hover:border-brass/40 md:flex-row md:items-center"
                 >
-                  <div className="flex items-center gap-5">
-                    <span className="eyebrow text-brass/80 font-mono">
+                  <div className="flex items-center gap-4 md:gap-6">
+                    <span className="eyebrow text-brass/80 font-mono w-6 shrink-0">
                       {String(i + 1).padStart(2, "0")}
                     </span>
+                    <div className="size-16 md:size-20 shrink-0 overflow-hidden rounded bg-slate-100 border border-border/70 shadow-xs relative">
+                      <img
+                        src={s.image || serviceFallbackImages[s.slug] || "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=150&q=80"}
+                        alt={s.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </div>
                     <div>
                       <span className="font-display text-2xl md:text-3xl transition-colors group-hover:text-brass">
                         {s.name}
                       </span>
-                      <p className="mt-0.5 text-xs text-ink-soft max-w-xl">{s.summary}</p>
+                      <p className="mt-1 text-xs text-ink-soft max-w-xl">{s.summary}</p>
                     </div>
                   </div>
 
@@ -343,7 +399,7 @@ function Index() {
               <span className="eyebrow text-brass">Studio Hub Location</span>
             </div>
             <p className="mt-1.5 text-sm font-medium text-foreground">{site.address}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Studio hours: Mon - Sat 8:00 - 20:00 · Sun 9:00 - 14:00</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Studio hours: Mon - Sat 8:00 AM - 8:00 PM · Sun 8:00 AM - 1:00 PM</p>
           </div>
         </div>
       </section>

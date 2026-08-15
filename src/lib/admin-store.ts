@@ -83,118 +83,35 @@ export type BeforeAfterItem = {
   description: string;
 };
 
+export type CaseStudyStat = { label: string; value: string };
+
+export type CaseStudy = {
+  id: string;
+  title: string;
+  category: string;
+  challenge: string;
+  solution: string;
+  result: string;
+  stats: CaseStudyStat[];
+  image: string;
+  tags: string;
+};
+
 export type CMSData = {
   services: Service[];
   testimonials: TestimonialItem[];
   journey: JourneyStepItem[];
   settings: StudioSettings;
   beforeAfterGallery: BeforeAfterItem[];
+  heroSlides: string[];
+  caseStudies: CaseStudy[];
 };
 
 const ORDERS_STORAGE_KEY = "spinanddry.bookings";
 const CMS_STORAGE_KEY = "spinanddry.cms_data";
 
-// Initial seed orders for immediate out-of-the-box demo
-const seedOrders: AdminOrder[] = [
-  {
-    reference: "SD-849201",
-    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    customerName: "Ananya Rao",
-    phone: "+91 98450 12345",
-    email: "ananya.rao@gmail.com",
-    customerType: "residential",
-    logistics: "pickup-delivery",
-    date: new Date().toISOString().slice(0, 10),
-    slot: "10:00 – 12:00",
-    address: "Villa 14, Prestige Park Grove, Kanakapura Road, JP Nagar 9th Phase, Bengaluru",
-    pincode: "560078",
-    coords: { lat: 12.8821, lng: 77.5752 },
-    distanceKm: 2.1,
-    status: "Inspected & Quoted",
-    paymentStatus: "Pending",
-    isExpress: true,
-    notes: "Living room velvet blackout drapes (14 ft) - handle pleats carefully, no water.",
-    items: [
-      { serviceSlug: "curtains-and-drapes", serviceName: "Curtain & Drape Cleaning", quantity: 6, unitPrice: 450 },
-      { serviceSlug: "carpets-and-area-rugs", serviceName: "Carpet & Area Rug Restoration", quantity: 100, unitPrice: 45 },
-    ],
-    quoteAmount: 7200,
-    assignedTechnician: "Master Tech Ramesh V.",
-  },
-  {
-    reference: "SD-739102",
-    createdAt: new Date(Date.now() - 3600000 * 14).toISOString(),
-    customerName: "The Olive Boutique Hotel",
-    phone: "+91 98860 99887",
-    email: "housekeeping@olivehotel.in",
-    customerType: "commercial",
-    logistics: "pickup-delivery",
-    date: new Date().toISOString().slice(0, 10),
-    slot: "08:00 – 10:00",
-    address: "Block A, 14th Cross Rd, JP Nagar 2nd Phase, Bengaluru",
-    pincode: "560078",
-    coords: { lat: 12.9092, lng: 77.5921 },
-    distanceKm: 4.8,
-    status: "In Processing",
-    paymentStatus: "Pending",
-    isExpress: false,
-    notes: "Commercial bed linen & plush bath towels batch 4B.",
-    items: [
-      { serviceSlug: "hotel-and-commercial-linen", serviceName: "Commercial & Hotel Linen", quantity: 150, unitPrice: 80 },
-    ],
-    quoteAmount: 12000,
-    assignedTechnician: "Logistics Specialist Suresh K.",
-  },
-  {
-    reference: "SD-950311",
-    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-    customerName: "Sandeep Varma",
-    phone: "+91 99001 88223",
-    email: "sandeep.v@outlook.com",
-    customerType: "residential",
-    logistics: "pickup-delivery",
-    date: new Date().toISOString().slice(0, 10),
-    slot: "14:00 – 16:00",
-    address: "Flat 402, Royal Palms Apartments, Narayana Nagar 1st Block, Konanakunte, Bengaluru",
-    pincode: "560062",
-    coords: { lat: 12.8761, lng: 77.5652 },
-    distanceKm: 0.3,
-    status: "QC Passed",
-    paymentStatus: "Paid - UPI",
-    isExpress: false,
-    notes: "Goose down king comforter & 4 silk cushion covers.",
-    items: [
-      { serviceSlug: "comforters-and-duvets", serviceName: "Comforter & Duvet Cleaning", quantity: 2, unitPrice: 550 },
-      { serviceSlug: "sofa-and-cushion-covers", serviceName: "Sofa & Cushion Cover Cleaning", quantity: 4, unitPrice: 250 },
-    ],
-    quoteAmount: 2100,
-    assignedTechnician: "Senior Tech Vikram P.",
-  },
-  {
-    reference: "SD-441299",
-    createdAt: new Date(Date.now() - 3600000 * 36).toISOString(),
-    customerName: "Priya Kulkarni",
-    phone: "+91 97412 33445",
-    email: "priya.designs@gmail.com",
-    customerType: "residential",
-    logistics: "drop-off",
-    date: new Date().toISOString().slice(0, 10),
-    slot: "16:00 – 18:00",
-    address: "Studio Direct Drop-off - Jayanagar 4th Block, Bengaluru",
-    pincode: "560041",
-    coords: { lat: 12.9250, lng: 77.5838 },
-    distanceKm: 5.9,
-    status: "Completed",
-    paymentStatus: "Paid - Card",
-    isExpress: true,
-    notes: "Hand-knotted Silk Persian Rug (10x14 ft) - wine stain lift.",
-    items: [
-      { serviceSlug: "carpets-and-area-rugs", serviceName: "Carpet & Area Rug Restoration", quantity: 140, unitPrice: 45 },
-    ],
-    quoteAmount: 6300,
-    assignedTechnician: "Master Tech Ramesh V.",
-  },
-];
+// Initial seed orders for immediate out-of-the-box demo (disabled to use real data only)
+const seedOrders: AdminOrder[] = [];
 
 const seedBeforeAfter: BeforeAfterItem[] = [
   {
@@ -233,6 +150,59 @@ const defaultCMSData: CMSData = {
     hours: [...site.hours],
   },
   beforeAfterGallery: seedBeforeAfter,
+  heroSlides: [
+    "https://images.unsplash.com/photo-1545173168-9f19472c043a?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1600&q=80"
+  ],
+  caseStudies: [
+    {
+      id: "silk-rug",
+      title: "10x14 ft Hand-Knotted Silk & Wool Persian Rug",
+      category: "Rugs & Carpets",
+      challenge: "Deep aged red wine stain, dust compaction, matted silk fringe.",
+      solution: "Controlled pH solvent extraction, hand-brushed fringe revival & low-heat air drying.",
+      result: "100% stain removal, restored silk lustre, 0% dye bleed.",
+      stats: [
+        { label: "Stain Lift Rate", value: "99.8%" },
+        { label: "Dye Retention", value: "100%" },
+        { label: "Processing Time", value: "72 Hours" },
+      ],
+      image: "https://images.unsplash.com/photo-1576016770956-debb63d90029?auto=format&fit=crop&w=1200&q=80",
+      tags: "Hand-knotted Silk, Stain Extraction, Fringe Restoration",
+    },
+    {
+      id: "velvet-drapes",
+      title: "14-Foot Blackout Lined Velvet Living Room Drapes",
+      category: "Curtains & Drapes",
+      challenge: "Accumulated urban particulate soot, heavy creasing, threat of shrinkage.",
+      solution: "Intake dimension logging, non-aqueous dry vapour treatment, vertical drape pressing.",
+      result: "Zero dimensional shrinkage, restored deep velvet pile texture.",
+      stats: [
+        { label: "Size Match", value: "100%" },
+        { label: "Dust Extraction", value: "100%" },
+        { label: "Re-hang Service", value: "Included" },
+      ],
+      image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80",
+      tags: "Floor-to-Ceiling Drapes, Zero Shrinkage, Vertical Steam Press",
+    },
+    {
+      id: "down-duvet",
+      title: "Goose Down King Size Hotel-Grade Duvet",
+      category: "Bedding & Quilts",
+      challenge: "Clumped down fill, body oil discolouration, allergen buildup.",
+      solution: "Low-RPM ozone wash chemistry, thermal fluff drying with ball agitators.",
+      result: "Restored 95% original loft height, 100% anti-microbial sanitisation.",
+      stats: [
+        { label: "Loft Restored", value: "95%" },
+        { label: "Allergen Removal", value: "100%" },
+        { label: "Sanitised", value: "Ozone Treated" },
+      ],
+      image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80",
+      tags: "Goose Down, Loft Revival, Ozone Anti-Allergen",
+    },
+  ],
 };
 
 // --- ORDERS METHODS ---
@@ -458,8 +428,20 @@ export function getStoredCMS(): CMSData {
       return defaultCMSData;
     }
     const parsed = JSON.parse(raw) as CMSData;
+    let modified = false;
     if (!parsed.beforeAfterGallery || !Array.isArray(parsed.beforeAfterGallery) || parsed.beforeAfterGallery.length === 0) {
       parsed.beforeAfterGallery = defaultCMSData.beforeAfterGallery;
+      modified = true;
+    }
+    if (!parsed.heroSlides || !Array.isArray(parsed.heroSlides) || parsed.heroSlides.length === 0) {
+      parsed.heroSlides = defaultCMSData.heroSlides;
+      modified = true;
+    }
+    if (!parsed.caseStudies || !Array.isArray(parsed.caseStudies) || parsed.caseStudies.length === 0) {
+      parsed.caseStudies = defaultCMSData.caseStudies;
+      modified = true;
+    }
+    if (modified) {
       localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(parsed));
     }
     return parsed;
@@ -480,4 +462,66 @@ export function saveCMS(cms: CMSData): void {
 export function resetCMS(): CMSData {
   saveCMS(defaultCMSData);
   return defaultCMSData;
+}
+
+// --- LEADS MANAGEMENT ---
+export type LeadStatus = "New" | "Contacted" | "Resolved";
+
+export type ContactLead = {
+  id: string;
+  createdAt: string;
+  name: string;
+  email: string;
+  phone: string;
+  topic: string;
+  message: string;
+  status: LeadStatus;
+};
+
+const LEADS_STORAGE_KEY = "spinanddry.leads";
+
+export function getStoredLeads(): ContactLead[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(LEADS_STORAGE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as ContactLead[];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLead(lead: Omit<ContactLead, "id" | "createdAt" | "status">): ContactLead[] {
+  if (typeof window === "undefined") return [];
+  const current = getStoredLeads();
+  const newLead: ContactLead = {
+    ...lead,
+    id: `lead-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    status: "New",
+  };
+  const updated = [newLead, ...current];
+  localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(updated));
+  return updated;
+}
+
+export function deleteLead(id: string): ContactLead[] {
+  if (typeof window === "undefined") return [];
+  const current = getStoredLeads();
+  const updated = current.filter((l) => l.id !== id);
+  localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(updated));
+  return updated;
+}
+
+export function updateLeadStatus(id: string, status: LeadStatus): ContactLead[] {
+  if (typeof window === "undefined") return [];
+  const current = getStoredLeads();
+  const updated = current.map((l) => {
+    if (l.id === id) {
+      return { ...l, status };
+    }
+    return l;
+  });
+  localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(updated));
+  return updated;
 }
