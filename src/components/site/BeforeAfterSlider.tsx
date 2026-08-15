@@ -2,10 +2,28 @@ import { useState, useRef, useEffect } from "react";
 import { Sparkles, ArrowLeftRight } from "lucide-react";
 import { BeforeAfterItem } from "@/lib/admin-store";
 
-export function BeforeAfterSlider({ items }: { items: BeforeAfterItem[] }) {
-  if (!items || items.length === 0) return null;
+const defaultFallbackItems: BeforeAfterItem[] = [
+  {
+    id: "ba-1",
+    title: "Living Room Blackout Drapes",
+    serviceName: "Curtain & Drape Restoration",
+    beforeImage: "/assets/curtain_before.jpg",
+    afterImage: "/assets/curtain_after.jpg",
+    description: "Deep dust buildup, body oil discolouration, and grease spots completely restored to original loft and luster.",
+  },
+  {
+    id: "ba-2",
+    title: "Luxury Linen Sofa Cushion",
+    serviceName: "Upholstery & Sofa Care",
+    beforeImage: "/assets/sofa_before.jpg",
+    afterImage: "/assets/sofa_after.jpg",
+    description: "Dark coffee spillages, embedded dust rings, and fabric discoloration deep cleaned using low-moisture organic extraction.",
+  },
+];
 
-  const [activeItem, setActiveItem] = useState<BeforeAfterItem>(items[0]!);
+export function BeforeAfterSlider({ items }: { items?: BeforeAfterItem[] }) {
+  const displayItems = items && items.length > 0 ? items : defaultFallbackItems;
+  const [activeItem, setActiveItem] = useState<BeforeAfterItem>(displayItems[0]!);
   const [sliderPosition, setSliderPosition] = useState(50); // 0 to 100
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
@@ -140,7 +158,7 @@ export function BeforeAfterSlider({ items }: { items: BeforeAfterItem[] }) {
                 Select Case Study
               </span>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                {items.map((item) => {
+                {displayItems.map((item) => {
                   const isActive = item.id === activeItem.id;
                   return (
                     <button

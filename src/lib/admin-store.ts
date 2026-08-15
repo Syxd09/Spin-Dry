@@ -457,7 +457,12 @@ export function getStoredCMS(): CMSData {
       localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(defaultCMSData));
       return defaultCMSData;
     }
-    return JSON.parse(raw) as CMSData;
+    const parsed = JSON.parse(raw) as CMSData;
+    if (!parsed.beforeAfterGallery || !Array.isArray(parsed.beforeAfterGallery) || parsed.beforeAfterGallery.length === 0) {
+      parsed.beforeAfterGallery = defaultCMSData.beforeAfterGallery;
+      localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(parsed));
+    }
+    return parsed;
   } catch {
     return defaultCMSData;
   }
