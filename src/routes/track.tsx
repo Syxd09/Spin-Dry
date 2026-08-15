@@ -39,6 +39,7 @@ export const Route = createFileRoute("/track")({
       },
       { property: "og:title", content: "Track Your Order — Spin & Dry" },
       { property: "og:url", content: "/track" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
     links: [{ rel: "canonical", href: "/track" }],
   }),
