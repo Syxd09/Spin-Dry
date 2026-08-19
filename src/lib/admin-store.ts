@@ -562,7 +562,7 @@ export function getGarmentAbbreviation(name: string): string {
   const words = name.trim().split(/\s+/);
   const firstWord = words[0] || "GM";
   if (firstWord.length >= 2) {
-    return (firstWord[0] + firstWord[firstWord.length - 1]).toUpperCase();
+    return (firstWord.charAt(0) + firstWord.charAt(firstWord.length - 1)).toUpperCase();
   }
   return (firstWord + "X").slice(0, 2).toUpperCase();
 }
