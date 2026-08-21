@@ -73,6 +73,7 @@ export type StudioSettings = {
   pickupRadiusKm: number;
   founded: number;
   hours: { days: string; time: string }[];
+  isClosedManually?: boolean;
 };
 
 export type BeforeAfterItem = {
@@ -149,6 +150,7 @@ const defaultCMSData: CMSData = {
     pickupRadiusKm: site.pickupRadiusKm,
     founded: site.founded,
     hours: [...site.hours],
+    isClosedManually: false,
   },
   beforeAfterGallery: seedBeforeAfter,
   heroSlides: [

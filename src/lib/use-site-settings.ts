@@ -23,6 +23,7 @@ const staticDefaults: StudioSettings = {
   pickupRadiusKm: site.pickupRadiusKm,
   founded: site.founded,
   hours: [...site.hours],
+  isClosedManually: false,
 };
 
 function readSettings(): StudioSettings {
@@ -94,4 +95,78 @@ export function useCMSServices(): Service[] {
   }, []);
 
   return list;
+}
+
+function parseSingleTime(str: string): number | null {
+  const match = str.trim().match(/^(\d+)(?::(\d+))?\s*(AM|PM)$/i);
+  if (!match) return null;
+
+  let hour = parseInt(match[1] || "0", 10);
+  const min = parseInt(match[2] || "0", 10);
+  const ampm = (match[3] || "").toUpperCase();
+
+  if (ampm === "PM" && hour < 12) hour += 12;
+  if (ampm === "AM" && hour === 12) hour = 0;
+
+  return hour * 60 + min;
+}
+
+function parseTimeString(timeStr: string): { startMinutes: number; endMinutes: number } | null {
+  try {
+    const normalized = timeStr.replace(/–/g, "-").replace(/—/g, "-").replace(/\s+/g, "");
+    const parts = normalized.split("-");
+    if (parts.length !== 2) return null;
+
+    const start = parseSingleTime(parts[0] || "");
+    const end = parseSingleTime(parts[1] || "");
+    if (start === null || end === null) return null;
+
+    return { startMinutes: start, endMinutes: end };
+  } catch {
+    return null;
+  }
+}
+
+export function getStudioStatus(settings: StudioSettings): { isOpen: boolean; label: string } {
+  if (settings.isClosedManually) {
+    return { isOpen: false, label: "Studio Closed (Holiday/Concierge Pause)" };
+  }
+
+  const now = new Date();
+  const currentDay = now.getDay(); // 0 = Sun, 1-6 = Mon-Sat
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const matchingHourConfig = settings.hours.find((h) => {
+    const daysLower = h.days.toLowerCase();
+    if (currentDay === 0) {
+      return daysLower.includes("sun") || daysLower.includes("sunday");
+    } else {
+      return (
+        daysLower.includes("mon") ||
+        daysLower.includes("sat") ||
+        daysLower.includes("tue") ||
+        daysLower.includes("wed") ||
+        daysLower.includes("thu") ||
+        daysLower.includes("fri") ||
+        daysLower.includes("weekday") ||
+        daysLower.includes("monday") ||
+        daysLower.includes("saturday")
+      );
+    }
+  });
+
+  if (!matchingHourConfig) {
+    return { isOpen: false, label: "Studio Closed Today" };
+  }
+
+  const timeRange = parseTimeString(matchingHourConfig.time);
+  if (!timeRange) {
+    const start = 8 * 60; // 8:00 AM
+    const end = currentDay === 0 ? 13 * 60 : 20 * 60; // 1:00 PM or 8:00 PM
+    const open = currentMinutes >= start && currentMinutes < end;
+    return { isOpen: open, label: open ? "Studio Open Today" : "Studio Closed Now" };
+  }
+
+  const open = currentMinutes >= timeRange.startMinutes && currentMinutes < timeRange.endMinutes;
+  return { isOpen: open, label: open ? "Studio Open Today" : "Studio Closed Now" };
 }

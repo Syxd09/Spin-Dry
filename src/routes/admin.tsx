@@ -15,6 +15,7 @@ import {
   Trash2,
   X,
   AlertCircle,
+  CalendarX,
   Truck,
   IndianRupee,
   ShieldAlert,
@@ -391,6 +392,65 @@ function AdminPage() {
             >
               <Menu className="size-4" />
             </button>
+          </div>
+
+          {/* Quick Booking Toggle Action */}
+          <div className="px-3.5 py-2.5 border-b border-slate-800/80 bg-slate-900/40">
+            {isSidebarOpen ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-wider">Bookings Portal</span>
+                  <span className={cn(
+                    "size-2 rounded-full inline-block animate-pulse",
+                    cms.settings.isClosedManually ? "bg-rose-500" : "bg-emerald-500"
+                  )} />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const isClosed = !cms.settings.isClosedManually;
+                    handleSaveCMSData({
+                      ...cms,
+                      settings: {
+                        ...cms.settings,
+                        isClosedManually: isClosed
+                      }
+                    });
+                  }}
+                  className={cn(
+                    "w-full rounded px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-center transition-all border shadow-xs",
+                    cms.settings.isClosedManually
+                      ? "bg-rose-950/40 border-rose-800/60 text-rose-300 hover:bg-rose-900/40"
+                      : "bg-emerald-950/40 border-emerald-850/60 text-emerald-300 hover:bg-emerald-900/40"
+                  )}
+                >
+                  {cms.settings.isClosedManually ? "🔴 Bookings Paused" : "🟢 Bookings Active"}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  const isClosed = !cms.settings.isClosedManually;
+                  handleSaveCMSData({
+                    ...cms,
+                    settings: {
+                      ...cms.settings,
+                      isClosedManually: isClosed
+                    }
+                  });
+                }}
+                className={cn(
+                  "size-8 rounded flex items-center justify-center border mx-auto transition-all shadow-xs",
+                  cms.settings.isClosedManually
+                    ? "bg-rose-950 border-rose-805 text-rose-450 hover:bg-rose-900"
+                    : "bg-emerald-950 border-emerald-855 text-emerald-450 hover:bg-emerald-900"
+                )}
+                title={cms.settings.isClosedManually ? "Bookings Paused (Click to Resume)" : "Bookings Active (Click to Pause)"}
+              >
+                <CalendarX className="size-4 shrink-0" />
+              </button>
+            )}
           </div>
 
           {/* Navigation Menu Links */}
@@ -2210,6 +2270,54 @@ function StudioSettingsCMSSection({
       <div>
         <h2 className="font-display text-2xl font-bold text-slate-900">Studio Settings &amp; Info</h2>
         <p className="text-xs text-slate-500">Update studio phone, address, operating hours, and service radius settings.</p>
+      </div>
+
+      {/* Dynamic / Forced Studio Status Override Toggle */}
+      <div className={cn(
+        "rounded-none border p-5 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-colors",
+        draft.isClosedManually 
+          ? "border-rose-200 bg-rose-50/20" 
+          : "border-emerald-250 bg-emerald-50/10"
+      )}>
+        <div>
+          <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span className={cn(
+              "size-2.5 rounded-full inline-block animate-pulse",
+              draft.isClosedManually ? "bg-rose-500" : "bg-emerald-500"
+            )} />
+            Studio Booking Status: {draft.isClosedManually ? "FORCED CLOSED" : "DYNAMIC OPERATING"}
+          </h3>
+          <p className="text-xs text-slate-500 mt-1 max-w-xl font-medium leading-relaxed">
+            {draft.isClosedManually 
+              ? "All booking portals are locked. The status dot in the header is forced to closed (red). Clients cannot book collections." 
+              : "Studio status updates dynamically based on opening hours. Clients can book standard collections during operating slots."
+            }
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            const val = !draft.isClosedManually;
+            const updated = { ...draft, isClosedManually: val };
+            setDraft(updated);
+            // Save immediately on toggle
+            const digits = updated.phone.replace(/[^0-9]/g, "");
+            onUpdate({
+              ...updated,
+              phoneHref: digits ? `tel:+${digits}` : updated.phoneHref,
+              whatsapp: digits ? `https://wa.me/${digits}` : updated.whatsapp,
+            });
+          }}
+          className={cn(
+            "rounded-none px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98]",
+            draft.isClosedManually
+              ? "bg-emerald-600 hover:bg-emerald-550 text-white"
+              : "bg-rose-600 hover:bg-rose-550 text-white"
+          )}
+        >
+          {draft.isClosedManually ? "Open Bookings" : "Emergency Pause Bookings"}
+        </button>
       </div>
 
       <div className="rounded-none border border-slate-200 bg-white p-6 shadow-sm space-y-4">

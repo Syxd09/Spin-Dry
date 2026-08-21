@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Menu, X, Phone, CalendarCheck, MessageSquare, MapPin } from "lucide-react";
 import { services } from "@/data/services";
-import { useSiteSettings } from "@/lib/use-site-settings";
+import { useSiteSettings, getStudioStatus } from "@/lib/use-site-settings";
 import { Wordmark } from "./Wordmark";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,7 @@ const nav = [
 
 export function SiteHeader() {
   const site = useSiteSettings();
+  const status = getStudioStatus(site);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -42,10 +43,16 @@ export function SiteHeader() {
         <div className="mx-auto flex max-w-[88rem] items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-center w-full sm:w-auto justify-center sm:justify-start">
             <span className="relative flex size-2 shrink-0">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+              <span className={cn(
+                "absolute inline-flex size-full animate-ping rounded-full opacity-75",
+                status.isOpen ? "bg-emerald-400" : "bg-rose-400"
+              )}></span>
+              <span className={cn(
+                "relative inline-flex size-2 rounded-full",
+                status.isOpen ? "bg-emerald-500" : "bg-rose-500"
+              )}></span>
             </span>
-            <span className="truncate">Studio Open Today · Konanakunte, BLR</span>
+            <span className="truncate">{status.label} · Konanakunte, BLR</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
             <Link to="/track" search={{ ref: "", phone: "" }} className="font-semibold text-brass hover:underline flex items-center gap-1">
