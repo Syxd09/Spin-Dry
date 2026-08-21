@@ -231,13 +231,17 @@ function AdminPage() {
   const metrics = useMemo(() => calculateMetrics(orders), [orders]);
 
   const filteredOrders = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const queryWithoutHash = query.startsWith("#") ? query.slice(1) : query;
+
     return orders.filter((o) => {
       const matchSearch =
-        o.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        o.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        o.phone.includes(searchQuery) ||
-        o.pincode.includes(searchQuery) ||
-        o.address.toLowerCase().includes(searchQuery.toLowerCase());
+        o.reference.toLowerCase().includes(query) ||
+        o.reference.toLowerCase().includes(queryWithoutHash) ||
+        o.customerName.toLowerCase().includes(query) ||
+        o.phone.includes(query) ||
+        o.pincode.includes(query) ||
+        o.address.toLowerCase().includes(query);
 
       const matchStatus = statusFilter === "All" || o.status === statusFilter;
       const matchExpress = !expressOnly || o.isExpress;
@@ -354,7 +358,7 @@ function AdminPage() {
   // AUTHENTICATED ADMIN COMMAND CENTER WITH SIDEBAR
   // -------------------------------------------------------------
   return (
-    <div className="min-h-screen flex bg-slate-100 font-sans text-slate-900">
+    <div className="h-screen w-screen flex bg-slate-100 font-sans text-slate-900 overflow-hidden">
       {/* LEFT SIDEBAR NAVIGATION */}
       <aside
         className={cn(
@@ -840,16 +844,16 @@ function AdminPage() {
                                   value={o.status}
                                   onChange={(e) => handleStatusChange(o.reference, e.target.value as OrderStatus)}
                                   className={cn(
-                                    "rounded-full border px-3 py-1 text-xs font-bold transition-all focus:outline-none cursor-pointer shadow-xs",
+                                    "rounded-none border px-2.5 py-1 text-xs font-bold transition-all focus:outline-none cursor-pointer shadow-xs",
                                     statusColors[o.status],
                                   )}
                                 >
                                   {statusPipeline.map((st) => (
-                                    <option key={st} value={st} className="bg-white text-slate-900">
+                                    <option key={st} value={st} className="bg-white text-slate-900 font-semibold">
                                       {st}
                                     </option>
                                   ))}
-                                  <option value="Cancelled" className="bg-white text-rose-700">
+                                  <option value="Cancelled" className="bg-white text-rose-700 font-semibold">
                                     Cancelled
                                   </option>
                                 </select>
@@ -857,7 +861,7 @@ function AdminPage() {
                                   <button
                                     type="button"
                                     onClick={() => handleQuickAdvance(o.reference, o.status)}
-                                    className="rounded-full bg-slate-100 p-1 text-slate-600 hover:bg-amber-500 hover:text-slate-950 transition-colors shadow-xs"
+                                    className="inline-flex size-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500 transition-all shadow-xs shrink-0 ml-1.5"
                                     title="1-Click Advance to Next Stage"
                                   >
                                     <ChevronRight className="size-3.5" />
@@ -1426,6 +1430,50 @@ function ServiceInlineEditor({
   const [pricesList, setPricesList] = useState<{ name: string; prices: Record<string, string> }[]>(
     draft.prices && draft.prices.length > 0 ? draft.prices : (servicePricingData[draft.slug] || [])
   );
+  const [newColumnName, setNewColumnName] = useState("");
+
+  const dynamicKeys = useMemo(() => {
+    const keysSet = new Set<string>();
+    
+    // Add default common categories
+    const commonDefaults = [
+      "Premium Laundry",
+      "Dry Clean",
+      "Premium Steam Press",
+      "Luxe Service"
+    ];
+    commonDefaults.forEach(k => keysSet.add(k));
+
+    // Add any keys present in the current items list
+    pricesList.forEach(item => {
+      if (item.prices) {
+        Object.keys(item.prices).forEach(k => {
+          if (item.prices[k] !== undefined) {
+            keysSet.add(k);
+          }
+        });
+      }
+    });
+
+    return Array.from(keysSet);
+  }, [pricesList]);
+
+  const handleAddColumn = () => {
+    const trimmed = newColumnName.trim();
+    if (!trimmed) return;
+    if (dynamicKeys.includes(trimmed)) {
+      alert("Column already exists");
+      return;
+    }
+    // Update all items in pricesList to initialize this key
+    const updated = pricesList.map(item => ({
+      ...item,
+      prices: { ...item.prices, [trimmed]: "" }
+    }));
+    setPricesList(updated);
+    setDraft({ ...draft, prices: updated });
+    setNewColumnName("");
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1509,9 +1557,31 @@ function ServiceInlineEditor({
         {/* Right Column: Pricing Catalog */}
         <div className="flex flex-col h-full">
           <label className="block text-[10px] font-bold uppercase text-slate-500 mb-2">Pricing Catalogue (₹ Starting Rates)</label>
-          <div className="flex-1 space-y-3 border border-slate-200 rounded-lg p-3 bg-slate-100/50 max-h-[500px] overflow-y-auto shadow-inner">
+          
+          {/* Dynamic Column / Category Adder */}
+          <div className="flex items-end gap-2 bg-slate-50 border border-slate-200 p-3 rounded-none mb-3 shadow-xs">
+            <div className="flex-1">
+              <label className="block text-[9px] font-bold uppercase text-slate-500 mb-1">Add Price Type / Column</label>
+              <input
+                type="text"
+                placeholder="e.g. Standard Wash, Single, 10-Pack"
+                value={newColumnName}
+                onChange={(e) => setNewColumnName(e.target.value)}
+                className="w-full rounded-none border border-slate-300 p-1.5 text-xs font-semibold bg-white focus:border-amber-500 focus:outline-none"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleAddColumn}
+              className="bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-none shrink-0 shadow-xs transition-colors"
+            >
+              + Add Column
+            </button>
+          </div>
+
+          <div className="flex-1 space-y-3 border border-slate-200 rounded-none p-3 bg-slate-100/50 max-h-[480px] overflow-y-auto shadow-inner">
             {pricesList.map((item, idx) => (
-              <div key={idx} className="border border-slate-200 rounded-lg p-3 bg-white shadow-sm hover:border-slate-300 transition-colors relative">
+              <div key={idx} className="border border-slate-200 rounded-none p-3 bg-white shadow-sm hover:border-slate-300 transition-colors relative">
                 <div className="flex items-center justify-between gap-3 mb-2.5">
                   <input
                     type="text"
@@ -1525,7 +1595,7 @@ function ServiceInlineEditor({
                         setDraft({ ...draft, prices: updated });
                       }
                     }}
-                    className="w-full rounded border border-slate-300 p-1.5 text-xs font-bold text-slate-900 bg-white focus:border-amber-500 focus:outline-none"
+                    className="w-full rounded-none border border-slate-300 p-1.5 text-xs font-bold text-slate-900 bg-white focus:border-amber-500 focus:outline-none"
                   />
                   <button
                     type="button"
@@ -1536,23 +1606,13 @@ function ServiceInlineEditor({
                     }}
                     className="text-rose-500 hover:text-rose-700 text-xs font-bold shrink-0 transition-colors"
                   >
-                    Remove
+                    Remove Row
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2 rounded-md border border-slate-100">
-                  {[
-                    "Premium Laundry",
-                    "Dry Clean",
-                    "Premium Steam Press",
-                    "Luxe Service",
-                    "Regular Wash & Iron",
-                    "Regular Wash & Fold",
-                    "Roll press",
-                    "Polish - Extra",
-                    "Starch - Extra"
-                  ].map((k) => (
-                    <div key={k} className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] text-slate-500 truncate w-24 pr-1">{k}:</span>
+                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2 rounded-none border border-slate-100">
+                  {dynamicKeys.map((k) => (
+                    <div key={k} className="flex items-center justify-between gap-1 border-b border-slate-100 pb-1">
+                      <span className="text-[10px] text-slate-500 truncate w-24 pr-1" title={k}>{k}:</span>
                       <input
                         type="text"
                         placeholder="—"
@@ -1565,7 +1625,7 @@ function ServiceInlineEditor({
                             setDraft({ ...draft, prices: updated });
                           }
                         }}
-                        className="w-16 rounded border border-slate-200 bg-white py-0.5 px-1.5 text-[10px] text-center font-mono text-slate-800 focus:border-amber-500 focus:outline-none"
+                        className="w-16 rounded-none border border-slate-200 bg-white py-0.5 px-1.5 text-[10px] text-center font-mono text-slate-800 focus:border-amber-500 focus:outline-none"
                       />
                     </div>
                   ))}
@@ -1579,7 +1639,7 @@ function ServiceInlineEditor({
                 setPricesList(updated);
                 setDraft({ ...draft, prices: updated });
               }}
-              className="w-full border border-dashed border-slate-300 rounded-lg py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200/80 hover:text-slate-800 bg-white shadow-xs transition-all"
+              className="w-full border border-dashed border-slate-300 rounded-none py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200/80 hover:text-slate-800 bg-white shadow-xs transition-all"
             >
               + Add Price Row
             </button>

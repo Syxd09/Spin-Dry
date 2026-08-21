@@ -92,53 +92,84 @@ function TrackPage() {
   const [phoneInput, setPhoneInput] = useState(search.phone || "");
 
   const [searchedOrder, setSearchedOrder] = useState<AdminOrder | null>(null);
+  const [matchedOrders, setMatchedOrders] = useState<AdminOrder[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
 
   // Auto-search if search params exist on initial mount
   useEffect(() => {
-    if (search.ref) {
-      handleLookup(search.ref, search.phone);
+    if (search.ref || search.phone) {
+      handleLookup(search.ref || "", search.phone || "");
     }
   }, [search.ref, search.phone]);
+
+  // Live listener to capture order changes or quote edits instantly
+  useEffect(() => {
+    function handleOrdersRefresh() {
+      if (hasSearched) {
+        // Read directly from inputs to refresh current active filters
+        handleLookup(refInput, phoneInput);
+      }
+    }
+    window.addEventListener("storage", handleOrdersRefresh);
+    window.addEventListener("orders-updated", handleOrdersRefresh);
+    return () => {
+      window.removeEventListener("storage", handleOrdersRefresh);
+      window.removeEventListener("orders-updated", handleOrdersRefresh);
+    };
+  }, [hasSearched, refInput, phoneInput]);
 
   function handleLookup(refToSearch: string, phoneToSearch: string) {
     setErrorMsg("");
     setSearchedOrder(null);
+    setMatchedOrders([]);
     setHasSearched(true);
 
     const cleanRef = refToSearch.trim().toUpperCase().replace(/^#/, "");
     const cleanPhone = phoneToSearch.trim().replace(/[^0-9]/g, "");
 
-    if (!cleanRef) {
-      setErrorMsg("Please enter your Order Reference Number (e.g. SD-849201).");
+    if (!cleanRef && !cleanPhone) {
+      setErrorMsg("Please enter either an Order Reference Number or a Mobile Phone Number to search.");
       return;
     }
 
     const allOrders = getStoredOrders();
+    let results = allOrders;
 
-    // Look for matching order
-    const match = allOrders.find((o) => {
-      const oRef = o.reference.toUpperCase().replace(/^#/, "");
-      const oPhoneClean = o.phone.replace(/[^0-9]/g, "");
+    if (cleanRef) {
+      results = results.filter((o) => {
+        const oRef = o.reference.toUpperCase().replace(/^#/, "");
+        return oRef === cleanRef || oRef === `SD-${cleanRef}`;
+      });
+    }
 
-      const refMatch = oRef === cleanRef || oRef === `SD-${cleanRef}`;
-      const phoneMatch =
-        !cleanPhone ||
-        oPhoneClean.includes(cleanPhone) ||
-        cleanPhone.includes(oPhoneClean.slice(-4));
+    if (cleanPhone) {
+      results = results.filter((o) => {
+        const oPhoneClean = o.phone.replace(/[^0-9]/g, "");
+        if (cleanPhone.length >= 5) {
+          const matchEnd = cleanPhone.slice(-5);
+          return oPhoneClean.endsWith(matchEnd);
+        }
+        return oPhoneClean.endsWith(cleanPhone) || oPhoneClean.includes(cleanPhone);
+      });
+    }
 
-      return refMatch && phoneMatch;
-    });
+    if (results.length === 0) {
+      if (cleanRef && cleanPhone) {
+        setErrorMsg(
+          `No order found matching reference #${cleanRef} and phone ending in ${cleanPhone.slice(-5)}.`
+        );
+      } else if (cleanRef) {
+        setErrorMsg(`No order found matching reference #${cleanRef}.`);
+      } else {
+        setErrorMsg(`No orders found matching phone ending in ${cleanPhone.slice(-5)}.`);
+      }
+      return;
+    }
 
-    if (match) {
-      setSearchedOrder(match);
-    } else {
-      setErrorMsg(
-        `No order found matching reference #${cleanRef}${
-          cleanPhone ? ` and phone ending in ${cleanPhone.slice(-4)}` : ""
-        }. Please verify your details or call our studio.`,
-      );
+    setMatchedOrders(results);
+    if (results.length === 1 && results[0]) {
+      setSearchedOrder(results[0]);
     }
   }
 
@@ -175,7 +206,7 @@ function TrackPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Order Reference Number *
+                  Order Reference Number
                 </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono text-sm font-bold text-brass">
@@ -183,11 +214,10 @@ function TrackPage() {
                   </span>
                   <input
                     type="text"
-                    required
-                    placeholder="SD-849201 or 849201"
+                    placeholder="e.g. SD-849201 or 849201"
                     value={refInput}
                     onChange={(e) => setRefInput(e.target.value)}
-                    className="w-full rounded border border-input bg-background py-3 pl-8 pr-4 text-sm font-mono font-bold text-foreground placeholder:font-sans placeholder:font-normal placeholder:text-muted-foreground focus:border-brass focus:outline-none"
+                    className="w-full rounded-none border border-input bg-background py-3 pl-8 pr-4 text-sm font-mono font-bold text-foreground placeholder:font-sans placeholder:font-normal placeholder:text-muted-foreground focus:border-brass focus:outline-none"
                   />
                 </div>
               </div>
@@ -200,10 +230,10 @@ function TrackPage() {
                   <Phone className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="tel"
-                    placeholder="+91 98450 12345 or last 4 digits"
+                    placeholder="Enter whole number or last 5 digits"
                     value={phoneInput}
                     onChange={(e) => setPhoneInput(e.target.value)}
-                    className="w-full rounded border border-input bg-background py-3 pl-10 pr-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:border-brass focus:outline-none"
+                    className="w-full rounded-none border border-input bg-background py-3 pl-10 pr-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:border-brass focus:outline-none"
                   />
                 </div>
               </div>
@@ -253,9 +283,79 @@ function TrackPage() {
           </div>
         )}
 
+        {/* Matching Orders List (Multiple Results) */}
+        {matchedOrders.length > 0 && !searchedOrder && (
+          <div className="mt-8 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
+            <div className="border-b border-border pb-3 flex items-center justify-between">
+              <h3 className="font-display text-xl text-foreground font-bold">
+                Orders Found ({matchedOrders.length})
+              </h3>
+              <span className="text-xs text-muted-foreground">Select an order to track live progress</span>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {matchedOrders.map((order) => {
+                const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
+                return (
+                  <div
+                    key={order.reference}
+                    onClick={() => setSearchedOrder(order)}
+                    className="cursor-pointer border border-border bg-card p-5 hover:border-brass transition-all hover:shadow-sm space-y-4 relative flex flex-col justify-between group rounded-none"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono text-sm font-bold text-brass">
+                          #{order.reference}
+                        </span>
+                        <span className={cn(
+                          "rounded-none px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                          order.status === "Completed"
+                            ? "bg-emerald-100 text-emerald-950"
+                            : order.status === "Cancelled"
+                            ? "bg-rose-100 text-rose-950"
+                            : "bg-amber-100 text-amber-950"
+                        )}>
+                          {order.status}
+                        </span>
+                      </div>
+                      <h4 className="font-display text-lg font-bold text-foreground group-hover:text-brass transition-colors">
+                        {order.customerName}
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Scheduled: <strong>{order.date}</strong> · {order.slot}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Services: <strong>{order.items.length} services</strong> ({totalItems} items)
+                      </p>
+                    </div>
+
+                    <div className="border-t border-border/60 pt-3 flex items-center justify-between text-xs mt-2">
+                      <span className="font-bold text-slate-800">
+                        Quote: ₹{order.quoteAmount}
+                      </span>
+                      <span className="inline-flex items-center gap-1 font-bold text-brass group-hover:underline">
+                        Track Care <ChevronRight className="size-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Live Order Status Display */}
         {searchedOrder && (
-          <div className="mt-8 space-y-6">
+          <div className="mt-8 space-y-6 animate-in fade-in duration-200">
+            {matchedOrders.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setSearchedOrder(null)}
+                className="inline-flex items-center gap-1.5 bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-none shadow-xs transition-colors mb-2"
+              >
+                ← Back to orders list ({matchedOrders.length})
+              </button>
+            )}
             {/* Live Studio Operational Alert */}
             {searchedOrder.adminAlert && (
               <div className="rounded-none border border-brass/60 bg-brass/10 p-5 text-foreground flex items-start gap-3.5 shadow-sm">
@@ -455,6 +555,23 @@ function TrackPage() {
                   </li>
                 ))}
               </ul>
+
+              <div className="mt-4 pt-4 border-t border-border flex flex-col gap-1.5">
+                <div className="flex justify-between items-center text-xs text-muted-foreground">
+                  <span>Itemised Subtotal</span>
+                  <span className="font-mono font-semibold">₹{searchedOrder.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)}</span>
+                </div>
+                {searchedOrder.isExpress && (
+                  <div className="flex justify-between items-center text-xs text-purple-600 font-semibold">
+                    <span>24h Express Rush Fee</span>
+                    <span>Included</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center border-t border-dashed border-border/80 pt-2.5 mt-1.5">
+                  <span className="text-sm font-bold text-foreground">Final Approved Quote</span>
+                  <span className="font-mono text-base font-extrabold text-brass">₹{searchedOrder.quoteAmount}</span>
+                </div>
+              </div>
 
               {searchedOrder.notes && (
                 <div className="mt-4 rounded-none bg-background p-4 border border-border/80">

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useSiteSettings
  *
  * A hook that reads the live CMS StudioSettings from localStorage.
@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { site } from "@/data/site";
 import type { StudioSettings } from "@/lib/admin-store";
 import { getStoredCMS } from "@/lib/admin-store";
+import { Service, services as defaultServices } from "@/data/services";
 
 const staticDefaults: StudioSettings = {
   name: site.name,
@@ -63,4 +64,34 @@ export function useSiteSettings(): StudioSettings {
  */
 export function getSiteSettings(): StudioSettings {
   return readSettings();
+}
+
+function readServices(): Service[] {
+  try {
+    const cms = getStoredCMS();
+    if (cms?.services && cms.services.length > 0) {
+      return cms.services;
+    }
+  } catch {
+    // ignore
+  }
+  return defaultServices;
+}
+
+export function useCMSServices(): Service[] {
+  const [list, setList] = useState<Service[]>(readServices);
+
+  useEffect(() => {
+    function onStorage() {
+      setList(readServices());
+    }
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("cms-updated", onStorage);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("cms-updated", onStorage);
+    };
+  }, []);
+
+  return list;
 }

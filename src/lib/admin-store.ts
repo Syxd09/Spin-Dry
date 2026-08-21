@@ -266,6 +266,7 @@ export function saveOrders(orders: AdminOrder[]): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
+    window.dispatchEvent(new Event("orders-updated"));
   } catch (err) {
     console.error("Failed to save orders to localStorage:", err);
   }

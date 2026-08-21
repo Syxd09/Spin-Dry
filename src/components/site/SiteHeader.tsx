@@ -39,19 +39,19 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 w-full transition-all">
       {/* Top Announcement & Concierge Bar */}
       <div className="border-b border-border/60 bg-ink px-5 py-2 text-xs text-background/80 md:px-10">
-        <div className="mx-auto flex max-w-[88rem] items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="relative flex size-2">
+        <div className="mx-auto flex max-w-[88rem] items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-center w-full sm:w-auto justify-center sm:justify-start">
+            <span className="relative flex size-2 shrink-0">
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
             </span>
-            <span>Studio Open Today · Konanakunte, Bengaluru</span>
+            <span className="truncate">Studio Open Today · Konanakunte, BLR</span>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-6">
             <Link to="/track" search={{ ref: "", phone: "" }} className="font-semibold text-brass hover:underline flex items-center gap-1">
               <MapPin className="size-3 text-brass" /> Track Order
             </Link>
-            <span className="hidden sm:inline">Free Doorstep Pickup within {site.pickupRadiusKm} km</span>
+            <span>Free Doorstep Pickup within {site.pickupRadiusKm} km</span>
             <a
               href={site.whatsapp}
               target="_blank"

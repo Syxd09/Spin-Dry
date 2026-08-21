@@ -4,6 +4,7 @@ import { Calculator, Check, Sparkles, ArrowRight, ShieldCheck, Clock } from "luc
 import { cn } from "@/lib/utils";
 import { getStoredCMS } from "@/lib/admin-store";
 import { services, servicePricingData } from "@/data/services";
+import { useCMSServices } from "@/lib/use-site-settings";
 
 type PricingCategory = {
   id: string;
@@ -82,8 +83,7 @@ const categories: PricingCategory[] = [
 ];
 
 export function InstantQuoteCalculator() {
-  const cmsData = getStoredCMS();
-  const cmsServices = cmsData.services && cmsData.services.length > 0 ? cmsData.services : services;
+  const cmsServices = useCMSServices();
 
   const dynamicCategories = useMemo(() => {
     return cmsServices.map((s) => {

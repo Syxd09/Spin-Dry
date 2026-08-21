@@ -131,12 +131,19 @@
     scroll-behavior: smooth;
   }
 
+  html,
+  body,
+  #root {
+    max-width: 100%;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
   }
 
   h1,

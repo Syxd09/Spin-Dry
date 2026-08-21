@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Loader2, MapPin, ArrowLeft, ArrowRight, CircleCheck, Sparkles, MessageSquare, Printer, ShieldCheck, Clock, Layers } from "lucide-react";
+import { Check, Loader2, MapPin, ArrowLeft, ArrowRight, CircleCheck, Sparkles, MessageSquare, Printer, ShieldCheck, Clock, Layers, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { services, serviceCategories, type Service, servicePricingData } from "@/data/services";
@@ -8,6 +8,7 @@ import { site, timeSlots } from "@/data/site";
 import { haversineKm, loadGoogleMaps, mapsBrowserKey } from "@/lib/geo";
 import { cn } from "@/lib/utils";
 import { getStoredOrders, type AdminOrder, getStoredCMS } from "@/lib/admin-store";
+import { useCMSServices } from "@/lib/use-site-settings";
 
 export type BookingDraft = {
   serviceSlugs: string[];
@@ -127,14 +128,7 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
     return getStoredOrders();
   }, [step, draft.date]);
 
-  const cmsData = useMemo(() => {
-    if (typeof window === "undefined") return { services: [] };
-    return getStoredCMS();
-  }, []);
-
-  const activeServices = useMemo(() => {
-    return cmsData.services && cmsData.services.length > 0 ? cmsData.services : services;
-  }, [cmsData.services]);
+  const activeServices = useCMSServices();
 
   const selected = useMemo(
     () => activeServices.filter((s) => draft.serviceSlugs.includes(s.slug)),
@@ -456,6 +450,15 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
             </table>
           </div>
 
+          <div className="mt-4 bg-amber-50/70 border border-amber-200/80 p-4 text-xs rounded-none text-slate-800 space-y-1">
+            <span className="font-bold flex items-center gap-1.5 text-amber-900 uppercase tracking-wider text-[10px]">
+              <AlertCircle className="size-3.5 text-amber-600 shrink-0" /> Approximate baseline estimate only
+            </span>
+            <p className="leading-relaxed">
+              The prices displayed above are baseline starting estimates for your items. Our team will perform a physical inspection of fabric dimensions, material conditions, and lining types. The exact final itemised bill will be shared directly with you via WhatsApp for your approval before processing begins.
+            </p>
+          </div>
+
           {draft.notes && (
             <div className="border-t border-border pt-4 text-xs">
               <span className="eyebrow text-muted-foreground block mb-1">Client Special Access / Fabric Notes</span>
@@ -525,7 +528,22 @@ export function BookingFlow({ initialService }: { initialService?: string }) {
           <span className="text-xs text-muted-foreground">Step {step + 1} of {steps.length}</span>
         </div>
 
-        <ol className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        {/* Mobile View Progress (Visible only on mobile) */}
+        <div className="block sm:hidden space-y-2">
+          <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider text-slate-850">
+            <span>Step {step + 1} of 6: <span className="text-brass">{steps[step]}</span></span>
+            <span className="font-mono text-[10px]">{Math.round(((step + 1) / 6) * 100)}%</span>
+          </div>
+          <div className="w-full bg-slate-100 h-1.5 border border-slate-200 rounded-none overflow-hidden">
+            <div 
+              className="bg-brass h-full transition-all duration-300" 
+              style={{ width: `${((step + 1) / 6) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Desktop View Progress (Hidden on mobile) */}
+        <ol className="hidden sm:grid grid-cols-6 gap-2">
           {steps.map((label, i) => (
             <li
               key={label}
